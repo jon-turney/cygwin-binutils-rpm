@@ -235,6 +235,7 @@ cat cygwin-opcodes.lang >> cygwin-binutils.lang
 %{_prefix}/%{cygwin32_target}/bin/objcopy
 %{_prefix}/%{cygwin32_target}/bin/objdump
 %{_prefix}/%{cygwin32_target}/bin/ranlib
+%{_prefix}/%{cygwin32_target}/bin/readelf
 %{_prefix}/%{cygwin32_target}/bin/strip
 %{_prefix}/%{cygwin32_target}/lib/ldscripts
 
@@ -268,6 +269,7 @@ cat cygwin-opcodes.lang >> cygwin-binutils.lang
 %{_prefix}/%{cygwin64_target}/bin/objcopy
 %{_prefix}/%{cygwin64_target}/bin/objdump
 %{_prefix}/%{cygwin64_target}/bin/ranlib
+%{_prefix}/%{cygwin64_target}/bin/readelf
 %{_prefix}/%{cygwin64_target}/bin/strip
 %{_prefix}/%{cygwin64_target}/lib/ldscripts
 
