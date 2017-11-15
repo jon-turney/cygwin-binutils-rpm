@@ -1,0 +1,66 @@
+--- a/bfd/configure
++++ b/bfd/configure
+@@ -3987,7 +3987,7 @@ fi
+ 
+ 
+ # Define the identity of the package.
+- PACKAGE='bfd'
++ PACKAGE=cygwin-bfd
+  VERSION='2.29.1'
+ 
+ 
+--- a/binutils/configure
++++ b/binutils/configure
+@@ -3732,7 +3732,7 @@ fi
+ 
+ 
+ # Define the identity of the package.
+- PACKAGE='binutils'
++ PACKAGE=cygwin-binutils
+  VERSION='2.29.1'
+ 
+ 
+--- a/gas/configure
++++ b/gas/configure
+@@ -3721,7 +3721,7 @@ fi
+ 
+ 
+ # Define the identity of the package.
+- PACKAGE='gas'
++ PACKAGE=cygwin-gas
+  VERSION='2.29.1'
+ 
+ 
+--- a/gprof/configure
++++ b/gprof/configure
+@@ -3647,7 +3647,7 @@ fi
+ 
+ 
+ # Define the identity of the package.
+- PACKAGE='gprof'
++ PACKAGE=cygwin-gprof
+  VERSION='2.29.1'
+ 
+ 
+--- a/ld/configure
++++ b/ld/configure
+@@ -4049,7 +4049,7 @@ fi
+ 
+ 
+ # Define the identity of the package.
+- PACKAGE='ld'
++ PACKAGE=cygwin-ld
+  VERSION='2.29.1'
+ 
+ 
+--- a/opcodes/configure
++++ b/opcodes/configure
+@@ -3716,7 +3716,7 @@ fi
+ 
+ 
+ # Define the identity of the package.
+- PACKAGE='opcodes'
++ PACKAGE=cygwin-opcodes
+  VERSION='2.29.1'
+ 
+ 
