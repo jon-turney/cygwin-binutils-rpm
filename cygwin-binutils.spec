@@ -1,7 +1,7 @@
 %global run_testsuite 0
 
 Name:           cygwin-binutils
-Version:        2.29.1
+Version:        2.31.1
 Release:        1%{?dist}
 Summary:        Cross-compiled version of binutils for Cygwin environments
 
@@ -275,6 +275,9 @@ cat cygwin-opcodes.lang >> cygwin-binutils.lang
 
 
 %changelog
+* Wed Dec 19 2018 Yaakov Selkowitz <yselkowi@redhat.com> - 2.31.1-1
+- new version
+
 * Wed Nov 15 2017 Yaakov Selkowitz <yselkowi@redhat.com> - 2.29.1-1
 - new version
 
