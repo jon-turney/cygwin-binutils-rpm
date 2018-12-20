@@ -14,6 +14,7 @@ Patch0:         w32api-sysroot.patch
 Patch1:         binutils-textdomain.patch
 
 
+BuildRequires:  gcc
 BuildRequires:  gettext-devel
 BuildRequires:  flex
 BuildRequires:  bison
