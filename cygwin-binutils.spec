@@ -1,17 +1,19 @@
 %global run_testsuite 0
 
 Name:           cygwin-binutils
-Version:        2.31.1
+Version:        2.34
 Release:        1%{?dist}
 Summary:        Cross-compiled version of binutils for Cygwin environments
 
 License:        GPLv2+ and LGPLv2+ and GPLv3+ and LGPLv3+
 Group:          Development/Libraries
 
-URL:            http://www.gnu.org/software/binutils/
-Source0:        http://ftpmirror.gnu.org/binutils/binutils-%{version}.tar.xz
-Patch0:         w32api-sysroot.patch
-Patch1:         binutils-textdomain.patch
+URL:            https://www.gnu.org/software/binutils/
+Source0:        https://ftpmirror.gnu.org/binutils/binutils-%{version}.tar.xz
+Patch1:         0001-PR25447.patch
+Patch2:         0002-PR24511.patch
+Patch1000:      w32api-sysroot.patch
+Patch1001:      binutils-textdomain.patch
 
 
 BuildRequires:  gcc
@@ -61,9 +63,7 @@ understand Cygwin executables and DLLs.
 
 
 %prep
-%setup -q -n binutils-%{version}
-%patch0 -p1
-%patch1 -p1
+%autosetup -n binutils-%{version} -p1
 
 
 %build
@@ -276,6 +276,9 @@ cat cygwin-opcodes.lang >> cygwin-binutils.lang
 
 
 %changelog
+* Wed Apr 01 2020 Yaakov Selkowitz <yselkowi@redhat.com> - 2.34-1
+- new version
+
 * Wed Dec 19 2018 Yaakov Selkowitz <yselkowi@redhat.com> - 2.31.1-1
 - new version
 
