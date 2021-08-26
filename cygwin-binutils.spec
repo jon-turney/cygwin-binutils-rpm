@@ -1,7 +1,7 @@
 %global run_testsuite 0
 
 Name:           cygwin-binutils
-Version:        2.34
+Version:        2.37
 Release:        1%{?dist}
 Summary:        Cross-compiled version of binutils for Cygwin environments
 
@@ -10,8 +10,8 @@ Group:          Development/Libraries
 
 URL:            https://www.gnu.org/software/binutils/
 Source0:        https://ftpmirror.gnu.org/binutils/binutils-%{version}.tar.xz
-Patch1:         0001-PR25447.patch
-Patch2:         0002-PR24511.patch
+Patch1:         binutils-2.37-cygwin-config-rpath.patch
+Patch2:         binutils-2.37-cygwin-peflags.patch
 Patch1000:      w32api-sysroot.patch
 Patch1001:      binutils-textdomain.patch
 
@@ -276,6 +276,9 @@ cat cygwin-opcodes.lang >> cygwin-binutils.lang
 
 
 %changelog
+* Thu Aug 26 2021 Yaakov Selkowitz <yselkowi@redhat.com> - 2.37-1
+- new version
+
 * Wed Apr 01 2020 Yaakov Selkowitz <yselkowi@redhat.com> - 2.34-1
 - new version
 
