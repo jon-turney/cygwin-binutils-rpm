@@ -177,6 +177,7 @@ make -C build_multilib install DESTDIR=$RPM_BUILD_ROOT/multilib
 
 # These files conflict with ordinary binutils.
 rm -rf $RPM_BUILD_ROOT%{_infodir}
+rm -f $RPM_BUILD_ROOT%{_libdir}/bfd-plugins/libdep.*
 
 # Keep the multilib versions of the strip, objdump and objcopy commands
 # We need these for the RPM integration as these tools must be able to
