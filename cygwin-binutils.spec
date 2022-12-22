@@ -1,7 +1,7 @@
 %global run_testsuite 0
 
 Name:           cygwin-binutils
-Version:        2.37
+Version:        2.39
 Release:        1%{?dist}
 Summary:        Cross-compiled version of binutils for Cygwin environments
 
@@ -9,9 +9,8 @@ License:        GPLv2+ and LGPLv2+ and GPLv3+ and LGPLv3+
 Group:          Development/Libraries
 
 URL:            https://www.gnu.org/software/binutils/
-Source0:        https://ftpmirror.gnu.org/binutils/binutils-%{version}.tar.xz
+Source0:        https://ftp.gnu.org/gnu/binutils/binutils-%{version}.tar.xz
 Patch1:         binutils-2.37-cygwin-config-rpath.patch
-Patch2:         binutils-2.37-cygwin-peflags.patch
 Patch1000:      w32api-sysroot.patch
 Patch1001:      binutils-textdomain.patch
 
