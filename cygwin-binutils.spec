@@ -1,8 +1,10 @@
 %global run_testsuite 0
 
+%undefine cygwin_build_32bit 
+
 Name:           cygwin-binutils
 Version:        2.39
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Cross-compiled version of binutils for Cygwin environments
 
 License:        GPLv2+ and LGPLv2+ and GPLv3+ and LGPLv3+
@@ -21,7 +23,6 @@ BuildRequires:  flex
 BuildRequires:  bison
 BuildRequires:  texinfo
 BuildRequires:  zlib-devel
-BuildRequires:  cygwin32-filesystem >= 7
 BuildRequires:  cygwin64-filesystem >= 7
 %if %{run_testsuite}
 BuildRequires:  dejagnu
@@ -33,27 +34,8 @@ Provides:       bundled(libiberty)
 Cross compiled binutils (utilities like 'strip', 'as', 'ld') which
 understand Cygwin executables and DLLs.
 
-%package -n cygwin-binutils-generic
-Summary:        Utilities which are needed for both the Cygwin32 and Cygwin64 toolchains
-
-%description -n cygwin-binutils-generic
-Utilities (like strip and objdump) which are needed for
-both the Cygwin32 and Cygwin64 toolchains
-
-%package -n cygwin32-binutils
-Summary:        Cross-compiled version of binutils for the Cygwin32 environment
-Requires:       cygwin-binutils-generic = %{version}-%{release}
-Requires:       cygwin32-filesystem >= 7
-Provides:       cygwin-binutils = %{version}-%{release}
-Obsoletes:      cygwin-binutils < %{version}-%{release}
-
-%description -n cygwin32-binutils
-Cross compiled binutils (utilities like 'strip', 'as', 'ld') which
-understand Cygwin executables and DLLs.
-
 %package -n cygwin64-binutils
 Summary:        Cross-compiled version of binutils for the Cygwin64 environment
-Requires:       cygwin-binutils-generic = %{version}-%{release}
 Requires:       cygwin64-filesystem >= 7
 
 %description -n cygwin64-binutils
@@ -66,32 +48,8 @@ understand Cygwin executables and DLLs.
 
 
 %build
-mkdir build_cyg32
-pushd build_cyg32
 CFLAGS="$RPM_OPT_FLAGS" \
-../configure \
-  --build=%_build --host=%_host \
-  --target=%{cygwin32_target} \
-  --with-sysroot=%{cygwin32_sysroot} \
-  --prefix=%{_prefix} \
-  --bindir=%{_bindir} \
-  --includedir=%{_includedir} \
-  --libdir=%{_libdir} \
-  --mandir=%{_mandir} \
-  --infodir=%{_infodir} \
-  --with-system-zlib \
-  --disable-gdb \
-  --disable-libdecnumber \
-  --disable-readline \
-  --disable-sim
-
-make all %{?_smp_mflags}
-popd
-
-mkdir build_cyg64
-pushd build_cyg64
-CFLAGS="$RPM_OPT_FLAGS" \
-../configure \
+./configure \
   --build=%_build --host=%_host \
   --target=%{cygwin64_target} \
   --with-sysroot=%{cygwin64_sysroot} \
@@ -106,85 +64,33 @@ CFLAGS="$RPM_OPT_FLAGS" \
   --disable-libdecnumber \
   --disable-readline \
   --disable-sim
-
 make all %{?_smp_mflags}
-popd
-
-# Create multilib versions for the tools strip, objdump and objcopy
-mkdir build_multilib
-pushd build_multilib
-CFLAGS="$RPM_OPT_FLAGS" \
-../configure \
-  --build=%_build --host=%_host \
-  --target=%{cygwin64_target} \
-  --enable-targets=%{cygwin64_target},%{cygwin32_target} \
-  --with-sysroot=%{cygwin64_sysroot} \
-  --prefix=%{_prefix} \
-  --bindir=%{_bindir} \
-  --includedir=%{_includedir} \
-  --libdir=%{_libdir} \
-  --mandir=%{_mandir} \
-  --infodir=%{_infodir} \
-  --with-system-zlib \
-  --disable-gdb \
-  --disable-libdecnumber \
-  --disable-readline \
-  --disable-sim
-
-make %{?_smp_mflags}
-popd
 
 
 %check
 %if !%{run_testsuite}
 echo ====================TESTSUITE DISABLED=========================
 %else
-pushd build_cyg32
-  make -k check < /dev/null || :
-  echo ====================TESTING CYGWIN32 =========================
-  cat {gas/testsuite/gas,ld/ld,binutils/binutils}.sum
-  echo ====================TESTING CYGWIN32 END=====================
-  for file in {gas/testsuite/gas,ld/ld,binutils/binutils}.{sum,log}
-  do
-    ln $file binutils-%{cygwin32_target}-$(basename $file) || :
-  done
-  tar cjf binutils-%{cygwin32_target}.tar.bz2 binutils-%{cygwin32_target}-*.{sum,log}
-  uuencode binutils-%{cygwin32_target}.tar.bz2 binutils-%{cygwin32_target}.tar.bz2
-  rm -f binutils-%{cygwin32_target}.tar.bz2 binutils-%{cygwin32_target}-*.{sum,log}
-popd
-
-pushd build_cyg64
   make -k check < /dev/null || :
   echo ====================TESTING CYGWIN64 =========================
   cat {gas/testsuite/gas,ld/ld,binutils/binutils}.sum
   echo ====================TESTING CYGWIN64 END=====================
   for file in {gas/testsuite/gas,ld/ld,binutils/binutils}.{sum,log}
   do
-    ln $file binutils-%{cygwin64_target}-$(basename $file) || :
+    ln $file binutils-%{cygwin64_$(basename $file) || :}
   done
-  tar cjf binutils-%{cygwin64_target}.tar.bz2 binutils-%{cygwin64_target}-*.{sum,log}
+  tar cjf binutils-%{cygwin64_target}.tar.bz2 binutils-%{cygwin64_*.{sum,log}}
   uuencode binutils-%{cygwin64_target}.tar.bz2 binutils-%{cygwin64_target}.tar.bz2
-  rm -f binutils-%{cygwin64_target}.tar.bz2 binutils-%{cygwin64_target}-*.{sum,log}
-popd
+  rm -f binutils-%{cygwin64_target}.tar.bz2 binutils-%{cygwin64_*.{sum,log}}
 %endif
 
 
 %install
-make -C build_cyg32 install DESTDIR=$RPM_BUILD_ROOT
-make -C build_cyg64 install DESTDIR=$RPM_BUILD_ROOT
-make -C build_multilib install DESTDIR=$RPM_BUILD_ROOT/multilib
+make install DESTDIR=$RPM_BUILD_ROOT
 
 # These files conflict with ordinary binutils.
 rm -rf $RPM_BUILD_ROOT%{_infodir}
 rm -f $RPM_BUILD_ROOT%{_libdir}/bfd-plugins/libdep.*
-
-# Keep the multilib versions of the strip, objdump and objcopy commands
-# We need these for the RPM integration as these tools must be able to
-# both process Cygwin32 and Cygwin64 binaries
-mv $RPM_BUILD_ROOT/multilib%{_bindir}/%{cygwin64_strip} $RPM_BUILD_ROOT%{_bindir}/%{cygwin_strip}
-mv $RPM_BUILD_ROOT/multilib%{_bindir}/%{cygwin64_objdump} $RPM_BUILD_ROOT%{_bindir}/%{cygwin_objdump}
-mv $RPM_BUILD_ROOT/multilib%{_bindir}/%{cygwin64_objcopy} $RPM_BUILD_ROOT%{_bindir}/%{cygwin_objcopy}
-rm -rf $RPM_BUILD_ROOT/multilib
 
 %find_lang cygwin-binutils
 %find_lang cygwin-bfd
@@ -199,83 +105,21 @@ cat cygwin-ld.lang >> cygwin-binutils.lang
 cat cygwin-opcodes.lang >> cygwin-binutils.lang
 
 
-%files -n cygwin-binutils-generic -f cygwin-binutils.lang
+%files -n cygwin64-binutils -f cygwin-binutils.lang
 %doc COPYING
 %{_mandir}/man1/*
-%{_bindir}/%{cygwin_strip}
-%{_bindir}/%{cygwin_objdump}
-%{_bindir}/%{cygwin_objcopy}
-
-%files -n cygwin32-binutils
-%{_bindir}/%{cygwin32_target}-addr2line
-%{_bindir}/%{cygwin32_target}-ar
-%{_bindir}/%{cygwin32_target}-as
-%{_bindir}/%{cygwin32_target}-c++filt
-%{_bindir}/%{cygwin32_target}-dlltool
-%{_bindir}/%{cygwin32_target}-dllwrap
-%{_bindir}/%{cygwin32_target}-elfedit
-%{_bindir}/%{cygwin32_target}-gprof
-%{_bindir}/%{cygwin32_target}-ld
-%{_bindir}/%{cygwin32_target}-ld.bfd
-%{_bindir}/%{cygwin32_target}-nm
-%{_bindir}/%{cygwin32_target}-objcopy
-%{_bindir}/%{cygwin32_target}-objdump
-%{_bindir}/%{cygwin32_target}-ranlib
-%{_bindir}/%{cygwin32_target}-readelf
-%{_bindir}/%{cygwin32_target}-size
-%{_bindir}/%{cygwin32_target}-strings
-%{_bindir}/%{cygwin32_target}-strip
-%{_bindir}/%{cygwin32_target}-windmc
-%{_bindir}/%{cygwin32_target}-windres
-%{_prefix}/%{cygwin32_target}/bin/ar
-%{_prefix}/%{cygwin32_target}/bin/as
-%{_prefix}/%{cygwin32_target}/bin/dlltool
-%{_prefix}/%{cygwin32_target}/bin/ld
-%{_prefix}/%{cygwin32_target}/bin/ld.bfd
-%{_prefix}/%{cygwin32_target}/bin/nm
-%{_prefix}/%{cygwin32_target}/bin/objcopy
-%{_prefix}/%{cygwin32_target}/bin/objdump
-%{_prefix}/%{cygwin32_target}/bin/ranlib
-%{_prefix}/%{cygwin32_target}/bin/readelf
-%{_prefix}/%{cygwin32_target}/bin/strip
-%{_prefix}/%{cygwin32_target}/lib/ldscripts
-
-%files -n cygwin64-binutils
-%{_bindir}/%{cygwin64_target}-addr2line
-%{_bindir}/%{cygwin64_target}-ar
-%{_bindir}/%{cygwin64_target}-as
-%{_bindir}/%{cygwin64_target}-c++filt
-%{_bindir}/%{cygwin64_target}-dlltool
-%{_bindir}/%{cygwin64_target}-dllwrap
-%{_bindir}/%{cygwin64_target}-elfedit
-%{_bindir}/%{cygwin64_target}-gprof
-%{_bindir}/%{cygwin64_target}-ld
-%{_bindir}/%{cygwin64_target}-ld.bfd
-%{_bindir}/%{cygwin64_target}-nm
-%{_bindir}/%{cygwin64_target}-objcopy
-%{_bindir}/%{cygwin64_target}-objdump
-%{_bindir}/%{cygwin64_target}-ranlib
-%{_bindir}/%{cygwin64_target}-readelf
-%{_bindir}/%{cygwin64_target}-size
-%{_bindir}/%{cygwin64_target}-strings
-%{_bindir}/%{cygwin64_target}-strip
-%{_bindir}/%{cygwin64_target}-windmc
-%{_bindir}/%{cygwin64_target}-windres
-%{_prefix}/%{cygwin64_target}/bin/ar
-%{_prefix}/%{cygwin64_target}/bin/as
-%{_prefix}/%{cygwin64_target}/bin/dlltool
-%{_prefix}/%{cygwin64_target}/bin/ld
-%{_prefix}/%{cygwin64_target}/bin/ld.bfd
-%{_prefix}/%{cygwin64_target}/bin/nm
-%{_prefix}/%{cygwin64_target}/bin/objcopy
-%{_prefix}/%{cygwin64_target}/bin/objdump
-%{_prefix}/%{cygwin64_target}/bin/ranlib
-%{_prefix}/%{cygwin64_target}/bin/readelf
-%{_prefix}/%{cygwin64_target}/bin/strip
+%{_bindir}/*
+%{_prefix}/%{cygwin64_target}/bin/*
 %{_prefix}/%{cygwin64_target}/lib/ldscripts
 
 
 %changelog
+* Fri Dec 23 2022 Corinna Vinschen <vinschen@redhat.com> - 2.39-2
+- drop 32 bit support
+
+* Thu Dec 22 2022 Corinna Vinschen <vinschen@redhat.com> - 2.39-1
+- new version
+
 * Thu Aug 26 2021 Yaakov Selkowitz <yselkowi@redhat.com> - 2.37-1
 - new version
 
