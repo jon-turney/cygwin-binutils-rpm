@@ -1,5 +1,5 @@
---- a/config.rpath
-+++ b/config.rpath
+---  a/config.rpath
++++  b/config.rpath
 @@ -438,7 +438,14 @@
    bsdi4*)
      ;;
