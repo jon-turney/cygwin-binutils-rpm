@@ -1,7 +1,7 @@
 %global run_testsuite 0
 
 Name:           cygwin-binutils
-Version:        2.42
+Version:        2.45.1
 Release:        1%{?dist}
 Summary:        Cross-compiled version of binutils for Cygwin environments
 
@@ -10,8 +10,7 @@ Group:          Development/Libraries
 
 URL:            https://www.gnu.org/software/binutils/
 Source0:        https://ftp.gnu.org/gnu/binutils/binutils-%{version}.tar.xz
-Patch1:		binutils-2.42-cygwin-config-rpath.patch
-#Patch2:	binutils-2.42-cygwin-pep-dll-double-definition.patch
+Patch1:		binutils-2.45.1-cygwin-config-rpath.patch
 Patch1000:      w32api-sysroot.patch
 Patch1001:      binutils-textdomain.patch
 
