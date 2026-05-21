@@ -1,0 +1,186 @@
+From 162be6f2ad05eab99fda65f19c1368b1d17d856d Mon Sep 17 00:00:00 2001
+From: Jon Turney <jon.turney@dronecode.org.uk>
+Date: Fri, 22 May 2026 13:43:15 +0100
+Subject: [PATCH] ld: Drop pep-dll-{aarch64,x86_64}.c
+
+When configuring with
+'--enable-targets=x86_64-w64-mingw32,aarch64-w64-mingw32', many
+duplicate symbol errors are produced:
+
+> /usr/lib/gcc/x86_64-pc-cygwin/16/../../../../x86_64-pc-cygwin/bin/ld: pep-dll-aarch64.o: in function `pep_dll_id_target':
+> /wip/binutils-gdb/build/ld/../../ld/pe-dll.c:493: multiple definition of `pep_dll_id_target'; pep-dll.o:/wip/binutils-gdb/build/ld/../../ld/pe-dll.c:493: first defined here
+> /usr/lib/gcc/x86_64-pc-cygwin/16/../../../../x86_64-pc-cygwin/bin/ld: pep-dll-aarch64.o: in function `pep_dll_add_excludes':
+> /wip/binutils-gdb/build/ld/../../ld/pe-dll.c:586: multiple definition of `pep_dll_add_excludes'; pep-dll.o:/wip/binutils-gdb/build/ld/../../ld/pe-dll.c:586: first defined here
+> /usr/lib/gcc/x86_64-pc-cygwin/16/../../../../x86_64-pc-cygwin/bin/ld: pep-dll-aarch64.o: in function `pep_find_data_imports':
+> /wip/binutils-gdb/build/ld/../../ld/pe-dll.c:1444: multiple definition of `pep_find_data_imports'; pep-dll.o:/wip/binutils-gdb/build/ld/../../ld/pe-dll.c:1444: first defined here
+> /usr/lib/gcc/x86_64-pc-cygwin/16/../../../../x86_64-pc-cygwin/bin/ld: pep-dll-aarch64.o: in function `pep_dll_generate_def_file':
+> /wip/binutils-gdb/build/ld/../../ld/pe-dll.c:1877: multiple definition of `pep_dll_generate_def_file'; pep-dll.o:/wip/binutils-gdb/build/ld/../../ld/pe-dll.c:1877: first defined here
+> /usr/lib/gcc/x86_64-pc-cygwin/16/../../../../x86_64-pc-cygwin/bin/ld: pep-dll-aarch64.o: in function `pep_create_import_fixup':
+> etc.
+
+On investigation, this is unsurprising, since we're compiling the same code twice. In
+fact, configure.tgt has:
+
+> arch64-*-pe* | aarch64-*-mingw*)
+>                         targ_extra_ofiles="deffilep.o pep-dll-aarch64.o pe-dll.o pdb.o"
+> x86_64-*-pe | x86_64-*-pep) targ_emul=i386pep ;
+>                         targ_extra_ofiles="deffilep.o pdb.o pep-dll-x86_64.o pe-dll.o"
+> x86_64-*-cygwin)        targ_emul=i386pep ;
+>                         targ_extra_ofiles="deffilep.o pdb.o pep-dll.o pe-dll.o"
+> x86_64-*-mingw*)        targ_emul=i386pep ;
+>                         targ_extra_ofiles="deffilep.o pdb.o pep-dll.o pe-dll.o"
+
+... so we're potentially including pep-dll.c compiled under three
+different names!
+
+I can't see anything in pe{,p}-dll.c which depends on the
+COFF_WITH_peAArch64 or COFF_WITH_pex64 defines, so just remove all this.
+
+Cc'ed Evgeny (Hi!), because I think this crosses with not-yet-submitted
+patches of his which do add some code conditional on COFF_WITH_peAArch64.
+
+I think it's possible in code that *does* need to depend on the target
+to replace build time checks of COFF_WITH_pe{AArch64,x64} with a runtime
+check of the output architecture (via pe_details->pe_arch?).
+
+Cc: Evgeny Karpov <evgeny.karpov@arm.com>
+Fixes: c60b3806799a ("aarch64-pe support for LD, GAS and BFD")
+Signed-off-by: Jon Turney <jon.turney@dronecode.org.uk>
+
+2026-05-29  Jon Turney  <jon.turney@dronecode.org.uk>
+
+	* Makefile.am (EXTRA_ld_new_SOURCES): Update.
+	* Makefile.in: Regenerate.
+	* configure.tgt (tar_extra_ofiles): Update.
+	* pep-dll-aarch64.c: Remove.
+	* pep-dll-x86_64.c: Remove.
+---
+ ld/Makefile.am       |  3 +--
+ ld/Makefile.in       |  6 ++----
+ ld/configure.tgt     |  4 ++--
+ ld/pep-dll-aarch64.c | 23 -----------------------
+ ld/pep-dll-x86_64.c  | 22 ----------------------
+ 5 files changed, 5 insertions(+), 53 deletions(-)
+ delete mode 100644 ld/pep-dll-aarch64.c
+ delete mode 100644 ld/pep-dll-x86_64.c
+
+diff --git a/ld/Makefile.am b/ld/Makefile.am
+index c219662d2e3..4066c231993 100644
+--- a/ld/Makefile.am
++++ b/ld/Makefile.am
+@@ -644,8 +644,7 @@ $(ALL_EMULATION_SOURCES) $(ALL_64_EMULATION_SOURCES): $(GEN_DEPENDS)
+ # We need this for automake to use YLWRAP.
+ EXTRA_ld_new_SOURCES = deffilep.y ldlex.l
+ # Allow dependency tracking to work for these files, too.
+-EXTRA_ld_new_SOURCES += ldelf.c ldelfgen.c pdb.c pep-dll.c pe-dll.c \
+-	 pep-dll-aarch64.c pep-dll-x86_64.c
++EXTRA_ld_new_SOURCES += ldelf.c ldelfgen.c pdb.c pep-dll.c pe-dll.c
+ 
+ ld_new_SOURCES = ldgram.y ldlex-wrapper.c lexsup.c ldlang.c mri.c ldctor.c ldmain.c \
+ 	ldwrite.c ldexp.c ldemul.c ldver.c ldmisc.c ldfile.c ldcref.c plugin.c \
+diff --git a/ld/Makefile.in b/ld/Makefile.in
+index f1ba6af5269..1abb9481b50 100644
+--- a/ld/Makefile.in
++++ b/ld/Makefile.in
+@@ -1026,8 +1026,8 @@ GEN_DEPENDS = $(srcdir)/genscripts.sh ldscripts/stamp
+ 
+ # Dependency tracking for the generated emulation files.
+ EXTRA_ld_new_SOURCES = deffilep.y ldlex.l ldelf.c ldelfgen.c pdb.c \
+-	pep-dll.c pe-dll.c pep-dll-aarch64.c pep-dll-x86_64.c \
+-	$(ALL_EMULATION_SOURCES) $(ALL_64_EMULATION_SOURCES)
++	pep-dll.c pe-dll.c $(ALL_EMULATION_SOURCES) \
++	$(ALL_64_EMULATION_SOURCES)
+ ld_new_SOURCES = ldgram.y ldlex-wrapper.c lexsup.c ldlang.c mri.c ldctor.c ldmain.c \
+ 	ldwrite.c ldexp.c ldemul.c ldver.c ldmisc.c ldfile.c ldcref.c plugin.c \
+ 	ldbuildid.c
+@@ -1597,8 +1597,6 @@ distclean-compile:
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mri.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pdb.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pe-dll.Po@am__quote@
+-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pep-dll-aarch64.Po@am__quote@
+-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pep-dll-x86_64.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pep-dll.Po@am__quote@
+ @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/plugin.Po@am__quote@
+ 
+diff --git a/ld/configure.tgt b/ld/configure.tgt
+index 460c24752de..55dd3c5ba97 100644
+--- a/ld/configure.tgt
++++ b/ld/configure.tgt
+@@ -127,7 +127,7 @@ aarch64-*-nto*)		targ_emul=aarch64nto
+ aarch64-*-pe* | aarch64-*-mingw* | aarch64-*-cygwin*)
+ 			targ_emul=aarch64pe
+ 			targ_extra_emuls=arm64pe
+-			targ_extra_ofiles="deffilep.o pep-dll-aarch64.o pe-dll.o pdb.o"
++			targ_extra_ofiles="deffilep.o pep-dll.o pe-dll.o pdb.o"
+ 			;;
+ alpha*-*-freebsd* | alpha*-*-kfreebsd*-gnu)
+ 			targ_emul=elf64alpha_fbsd
+@@ -999,7 +999,7 @@ x86_64-*-freebsd* | x86_64-*-kfreebsd*-gnu)
+ 			;;
+ x86_64-*-pe | x86_64-*-pep) targ_emul=i386pep ;
+ 			targ_extra_emuls=i386pe ;
+-			targ_extra_ofiles="deffilep.o pdb.o pep-dll-x86_64.o pe-dll.o"
++			targ_extra_ofiles="deffilep.o pdb.o pep-dll.o pe-dll.o"
+ 			;;
+ x86_64-*-cygwin)	targ_emul=i386pep ;
+ 			targ_extra_emuls=i386pe
+diff --git a/ld/pep-dll-aarch64.c b/ld/pep-dll-aarch64.c
+deleted file mode 100644
+index 16f748b33fd..00000000000
+--- a/ld/pep-dll-aarch64.c
++++ /dev/null
+@@ -1,23 +0,0 @@
+-/* Tiny wrapper over pep-dll.c
+-   Copyright (C) 2006-2026 Free Software Foundation, Inc.
+-
+-   This file is part of the GNU Binutils.
+-
+-   This program is free software; you can redistribute it and/or modify
+-   it under the terms of the GNU General Public License as published by
+-   the Free Software Foundation; either version 3 of the License, or
+-   (at your option) any later version.
+-
+-   This program is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-   GNU General Public License for more details.
+-
+-   You should have received a copy of the GNU General Public License
+-   along with this program; if not, write to the Free Software
+-   Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
+-   MA 02110-1301, USA.  */
+-
+-#define COFF_WITH_peAArch64
+-
+-#include "pep-dll.c"
+diff --git a/ld/pep-dll-x86_64.c b/ld/pep-dll-x86_64.c
+deleted file mode 100644
+index a61ca3e8216..00000000000
+--- a/ld/pep-dll-x86_64.c
++++ /dev/null
+@@ -1,22 +0,0 @@
+-/* Tiny wrapper over pep-dll.c
+-   Copyright (C) 2006-2026 Free Software Foundation, Inc.
+-   This file is part of the GNU Binutils.
+-
+-   This program is free software; you can redistribute it and/or modify
+-   it under the terms of the GNU General Public License as published by
+-   the Free Software Foundation; either version 3 of the License, or
+-   (at your option) any later version.
+-
+-   This program is distributed in the hope that it will be useful,
+-   but WITHOUT ANY WARRANTY; without even the implied warranty of
+-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+-   GNU General Public License for more details.
+-
+-   You should have received a copy of the GNU General Public License
+-   along with this program; if not, write to the Free Software
+-   Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston,
+-   MA 02110-1301, USA.  */
+-
+-#define COFF_WITH_pex64
+-
+-#include "pep-dll.c"
+-- 
+2.51.0
+
