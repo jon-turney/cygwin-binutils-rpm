@@ -1,0 +1,220 @@
+From fc28f2e4cb45497bbdbfb792a6437ca4fed0fab8 Mon Sep 17 00:00:00 2001
+From: Evgeny Karpov <eukarpov@gmail.com>
+Date: Tue, 9 Jul 2024 16:05:29 +0200
+Subject: [PATCH 03/18] aarch64: Fix IMAGE_REL_ARM64_PAGEBASE_REL21 relocation
+ and symbol reduction for relocations (#2)
+
+Initially, the change was to fix IMAGE_REL_ARM64_PAGEBASE_REL21, which was addressing only 1MB instead of 4GB.
+This change triggered multiple changes in binutils and gcc to support the small code model.
+
+Probably, rel->r_type = IMAGE_REL_ARM64_ABSOLUTE was done on purpose to bypass changes in processed relocations in a later call to _bfd_coff_generic_relocate_section. However, it was breaking the relocation reduction logic, as the initial relocation type was no longer known. All PE relocations have been replaced with IMAGE_REL_ARM64_ABSOLUTE.
+To avoid extra processing and introducing an extra field in the relocation structure,
+rel->r_type = IMAGE_REL_ARM64_ABSOLUTE has been replaced with rel->r_vaddr = -1,
+and a check to skip relocation processing has been added to _bfd_coff_generic_relocate_section.
+
+In one of the relocation processing steps, there is logic to reduce a symbol name to a section name where it is placed.
+In the COFF format on AArch64, this should not happen for symbols used in relocations that cannot be fully handled at the object compiling time. This information will be used by the linker to make correct relocation. Otherwise, it can lead to a silent relocation overflow during the linking step because the linker assumes everything looks good, which most likely results in a crash upon execution.
+
+To resolve this issue, S_SHOULD_BE_REDUCED_TO_SECTION_NAME has been added.
+It is still a prototype and will be refactored before submitting the patch series to the mailing list.
+
+This fix relies on changes in gcc.
+aarch64: Multiple adjustments to support the SMALL code model correctly
+
+This change resolves the following issues:
+Relocation overflow when a struct is large
+Relocation overflow issue when building FFmpeg with -O3
+---
+ bfd/coff-aarch64.c | 31 +++++++++++--------------------
+ bfd/cofflink.c     |  3 +++
+ gas/symbols.c      | 19 +++++++++++++++++++
+ gas/symbols.h      |  2 ++
+ gas/write.c        |  3 +++
+ 5 files changed, 38 insertions(+), 20 deletions(-)
+
+diff --git a/bfd/coff-aarch64.c b/bfd/coff-aarch64.c
+index af4a44dede0..920378c9a2c 100644
+--- a/bfd/coff-aarch64.c
++++ b/bfd/coff-aarch64.c
+@@ -579,8 +579,7 @@ coff_pe_aarch64_relocate_section (bfd *output_bfd,
+ 		input_section, rel->r_vaddr - input_section->vma);
+ 
+ 	    bfd_putl32 (val, contents + rel->r_vaddr);
+-	    rel->r_type = IMAGE_REL_ARM64_ABSOLUTE;
+-
++	    rel->r_vaddr = -1;
+ 	    break;
+ 	  }
+ 
+@@ -614,7 +613,7 @@ coff_pe_aarch64_relocate_section (bfd *output_bfd,
+ 	    opcode |= val & 0x3ffffff;
+ 
+ 	    bfd_putl32 (opcode, contents + rel->r_vaddr);
+-	    rel->r_type = IMAGE_REL_ARM64_ABSOLUTE;
++	    rel->r_vaddr = -1;
+ 
+ 	    break;
+ 	  }
+@@ -649,8 +648,7 @@ coff_pe_aarch64_relocate_section (bfd *output_bfd,
+ 	    opcode |= (val & 0x7ffff) << 5;
+ 
+ 	    bfd_putl32 (opcode, contents + rel->r_vaddr);
+-	    rel->r_type = IMAGE_REL_ARM64_ABSOLUTE;
+-
++	    rel->r_vaddr = -1;
+ 	    break;
+ 	  }
+ 
+@@ -684,8 +682,7 @@ coff_pe_aarch64_relocate_section (bfd *output_bfd,
+ 	    opcode |= (val & 0x3fff) << 5;
+ 
+ 	    bfd_putl32 (opcode, contents + rel->r_vaddr);
+-	    rel->r_type = IMAGE_REL_ARM64_ABSOLUTE;
+-
++	    rel->r_vaddr = -1;
+ 	    break;
+ 	  }
+ 
+@@ -721,7 +718,7 @@ coff_pe_aarch64_relocate_section (bfd *output_bfd,
+ 	    opcode |= (val & 0x1ffffc) << 3;
+ 
+ 	    bfd_putl32 (opcode, contents + rel->r_vaddr);
+-	    rel->r_type = IMAGE_REL_ARM64_ABSOLUTE;
++	    rel->r_vaddr = -1;
+ 
+ 	    break;
+ 	  }
+@@ -758,8 +755,7 @@ coff_pe_aarch64_relocate_section (bfd *output_bfd,
+ 	    opcode |= (val & 0x1ffffc) << 3;
+ 
+ 	    bfd_putl32 (opcode, contents + rel->r_vaddr);
+-	    rel->r_type = IMAGE_REL_ARM64_ABSOLUTE;
+-
++	    rel->r_vaddr = -1;
+ 	    break;
+ 	  }
+ 
+@@ -787,8 +783,7 @@ coff_pe_aarch64_relocate_section (bfd *output_bfd,
+ 		input_section, rel->r_vaddr - input_section->vma);
+ 
+ 	    bfd_putl32 (val, contents + rel->r_vaddr);
+-	    rel->r_type = IMAGE_REL_ARM64_ABSOLUTE;
+-
++	    rel->r_vaddr = -1;
+ 	    break;
+ 	  }
+ 
+@@ -832,8 +827,7 @@ coff_pe_aarch64_relocate_section (bfd *output_bfd,
+ 	    opcode |= val << 10;
+ 
+ 	    bfd_putl32 (opcode, contents + rel->r_vaddr);
+-	    rel->r_type = IMAGE_REL_ARM64_ABSOLUTE;
+-
++	    rel->r_vaddr = -1;
+ 	    break;
+ 	  }
+ 
+@@ -855,8 +849,7 @@ coff_pe_aarch64_relocate_section (bfd *output_bfd,
+ 	    opcode |= val << 10;
+ 
+ 	    bfd_putl32 (opcode, contents + rel->r_vaddr);
+-	    rel->r_type = IMAGE_REL_ARM64_ABSOLUTE;
+-
++	    rel->r_vaddr = -1;
+ 	    break;
+ 	  }
+ 
+@@ -876,8 +869,7 @@ coff_pe_aarch64_relocate_section (bfd *output_bfd,
+ 		input_section, rel->r_vaddr - input_section->vma);
+ 
+ 	    bfd_putl32 (val, contents + rel->r_vaddr);
+-	    rel->r_type = IMAGE_REL_ARM64_ABSOLUTE;
+-
++	    rel->r_vaddr = -1;
+ 	    break;
+ 	  }
+ 
+@@ -901,8 +893,7 @@ coff_pe_aarch64_relocate_section (bfd *output_bfd,
+ 
+ 
+ 	    bfd_putl16 (idx, contents + rel->r_vaddr);
+-	    rel->r_type = IMAGE_REL_ARM64_ABSOLUTE;
+-
++	    rel->r_vaddr = -1;
+ 	    break;
+ 	  }
+ 
+diff --git a/bfd/cofflink.c b/bfd/cofflink.c
+index 38278e230da..5c7c12277a9 100644
+--- a/bfd/cofflink.c
++++ b/bfd/cofflink.c
+@@ -2973,6 +2973,9 @@ _bfd_coff_generic_relocate_section (bfd *output_bfd,
+ 
+       symndx = rel->r_symndx;
+ 
++      if (rel->r_vaddr == (bfd_vma) -1)
++	continue;
++
+       if (symndx == -1)
+ 	{
+ 	  h = NULL;
+diff --git a/gas/symbols.c b/gas/symbols.c
+index 275d056cd42..cc6b8e4e7ee 100644
+--- a/gas/symbols.c
++++ b/gas/symbols.c
+@@ -2403,6 +2403,25 @@ S_IS_DEBUG (const symbolS *s)
+   return 0;
+ }
+ 
++int
++S_SHOULD_BE_REDUCED_TO_SECTION_NAME (const symbolS *s) {
++#if defined(COFFAARCH64)
++  if (S_GET_STORAGE_CLASS ((symbolS *) s) == C_STAT)
++    return 0;
++
++  if (!strncmp(".L", s->name, 2))
++    return 0;
++
++  if (!strcmp(".rdata", s->bsym->section->name) || !strcmp(".data", s->bsym->section->name))
++    return 0;
++
++#else
++  (void) s; /* Avoid unused variable warning.  */
++#endif
++
++  return 1;
++}
++
+ int
+ S_IS_LOCAL (const symbolS *s)
+ {
+diff --git a/gas/symbols.h b/gas/symbols.h
+index 75d014ce8ce..40585eecdc6 100644
+--- a/gas/symbols.h
++++ b/gas/symbols.h
+@@ -133,6 +133,8 @@ extern void S_SET_THREAD_LOCAL (symbolS *);
+ extern void S_SET_VOLATILE (symbolS *);
+ extern void S_CLEAR_VOLATILE (symbolS *);
+ extern void S_SET_FORWARD_REF (symbolS *);
++extern int S_SHOULD_BE_REDUCED_TO_SECTION_NAME (const symbolS *s);
++
+ 
+ #ifndef WORKING_DOT_WORD
+ struct broken_word
+diff --git a/gas/write.c b/gas/write.c
+index c56ad28ea51..30f41109022 100644
+--- a/gas/write.c
++++ b/gas/write.c
+@@ -900,6 +900,9 @@ adjust_reloc_syms (bfd *abfd ATTRIBUTE_UNUSED,
+ 	if ((symsec->flags & SEC_THREAD_LOCAL) != 0)
+ 	  continue;
+ 
++	if (!S_SHOULD_BE_REDUCED_TO_SECTION_NAME (sym))
++		continue;
++
+ 	val = S_GET_VALUE (sym);
+ 
+ #if defined(TC_AARCH64) && defined(OBJ_COFF)
+-- 
+2.51.0
+

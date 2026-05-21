@@ -1,0 +1,300 @@
+From a98cfc548bd205a745740a4fb75424baa506220f Mon Sep 17 00:00:00 2001
+From: Evgeny Karpov <eukarpov@gmail.com>
+Date: Thu, 31 Oct 2024 18:49:29 +0100
+Subject: [PATCH 04/18] Add big object support for aarch64 PE
+
+Co-authored-by: Martin Vejbora <mvejbora@microsoft.com>
+---
+ bfd/coff-aarch64.c             | 75 ++++++++++++++++++++++++++++++++++
+ bfd/config.bfd                 |  2 +-
+ bfd/configure                  |  1 +
+ bfd/configure.ac               |  1 +
+ bfd/cpu-aarch64.c              |  2 +-
+ bfd/pe-aarch64.c               |  3 ++
+ bfd/targets.c                  |  2 +
+ gas/config/tc-aarch64.c        | 22 +++++++++-
+ gas/testsuite/gas/pe/big-obj.d |  2 +-
+ ld/pe-dll.c                    | 12 ++++++
+ 10 files changed, 118 insertions(+), 4 deletions(-)
+
+diff --git a/bfd/coff-aarch64.c b/bfd/coff-aarch64.c
+index 920378c9a2c..9e77de1a5f1 100644
+--- a/bfd/coff-aarch64.c
++++ b/bfd/coff-aarch64.c
+@@ -1009,3 +1009,78 @@ const bfd_target
+ 
+   COFF_SWAP_TABLE
+ };
++
++#ifdef COFF_WITH_PE_BIGOBJ
++const bfd_target
++  TARGET_SYM_BIG =
++{
++  TARGET_NAME_BIG,
++  bfd_target_coff_flavour,
++  BFD_ENDIAN_LITTLE,		/* Data byte order is little.  */
++  BFD_ENDIAN_LITTLE,		/* Header byte order is little.  */
++
++  (HAS_RELOC | EXEC_P		/* Object flags.  */
++   | HAS_LINENO | HAS_DEBUG
++   | HAS_SYMS | HAS_LOCALS | WP_TEXT | D_PAGED | BFD_COMPRESS | BFD_DECOMPRESS),
++
++  (SEC_HAS_CONTENTS | SEC_ALLOC | SEC_LOAD | SEC_RELOC /* Section flags.  */
++#ifdef COFF_WITH_PE
++   | SEC_LINK_ONCE | SEC_LINK_DUPLICATES | SEC_READONLY | SEC_DEBUGGING
++#endif
++   | SEC_CODE | SEC_DATA | SEC_EXCLUDE ),
++
++#ifdef TARGET_UNDERSCORE
++  TARGET_UNDERSCORE,		/* Leading underscore.  */
++#else
++  0,				/* Leading underscore.  */
++#endif
++  '/',				/* Ar_pad_char.  */
++  15,				/* Ar_max_namelen.  */
++  0,				/* match priority.  */
++  TARGET_KEEP_UNUSED_SECTION_SYMBOLS, /* keep unused section symbols.  */
++
++  /* Data conversion functions.  */
++  bfd_getl64, bfd_getl_signed_64, bfd_putl64,
++  bfd_getl32, bfd_getl_signed_32, bfd_putl32,
++  bfd_getl16, bfd_getl_signed_16, bfd_putl16, /* Data.  */
++  /* Header conversion functions.  */
++  bfd_getl64, bfd_getl_signed_64, bfd_putl64,
++  bfd_getl32, bfd_getl_signed_32, bfd_putl32,
++  bfd_getl16, bfd_getl_signed_16, bfd_putl16, /* Hdrs.  */
++
++  /* Note that we allow an object file to be treated as a core file as well.  */
++  {				/* bfd_check_format.  */
++    _bfd_dummy_target,
++    coff_object_p,
++    bfd_generic_archive_p,
++    coff_object_p
++  },
++  {				/* bfd_set_format.  */
++    _bfd_bool_bfd_false_error,
++    coff_mkobject,
++    _bfd_generic_mkarchive,
++    _bfd_bool_bfd_false_error
++  },
++  {				/* bfd_write_contents.  */
++    _bfd_bool_bfd_false_error,
++    coff_write_object_contents,
++    _bfd_write_archive_contents,
++    _bfd_bool_bfd_false_error
++  },
++
++  BFD_JUMP_TABLE_GENERIC (coff_aarch64),
++  BFD_JUMP_TABLE_COPY (coff),
++  BFD_JUMP_TABLE_CORE (_bfd_nocore),
++  BFD_JUMP_TABLE_ARCHIVE (_bfd_archive_coff),
++  BFD_JUMP_TABLE_SYMBOLS (coff),
++  BFD_JUMP_TABLE_RELOCS (coff),
++  BFD_JUMP_TABLE_WRITE (coff),
++  BFD_JUMP_TABLE_LINK (coff),
++  BFD_JUMP_TABLE_DYNAMIC (_bfd_nodynamic),
++
++  NULL,
++
++  &bigobj_swap_table
++};
++#endif
++
+diff --git a/bfd/config.bfd b/bfd/config.bfd
+index 4e5a838fe4e..d9131276447 100644
+--- a/bfd/config.bfd
++++ b/bfd/config.bfd
+@@ -250,7 +250,7 @@ case "${targ}" in
+     ;;
+   aarch64-*-pe* | aarch64-*-mingw*)
+     targ_defvec=aarch64_pe_le_vec
+-    targ_selvecs="aarch64_pe_le_vec aarch64_pei_le_vec aarch64_elf64_le_vec aarch64_elf64_be_vec aarch64_elf32_le_vec aarch64_elf32_be_vec arm_elf32_le_vec arm_elf32_be_vec pdb_vec"
++    targ_selvecs="aarch64_pe_le_vec aarch64_pei_le_vec aarch64_pe_big_vec aarch64_elf64_le_vec aarch64_elf64_be_vec aarch64_elf32_le_vec aarch64_elf32_be_vec arm_elf32_le_vec arm_elf32_be_vec pdb_vec"
+     want64=true
+     targ_underscore=no
+     ;;
+diff --git a/bfd/configure b/bfd/configure
+index 435b8e20718..71e421c7c93 100755
+--- a/bfd/configure
++++ b/bfd/configure
+@@ -15491,6 +15491,7 @@ do
+     aarch64_mach_o_vec)		 tb="$tb mach-o-aarch64.lo"; target_size=64 ;;
+     aarch64_pei_le_vec)		 tb="$tb pei-aarch64.lo pe-aarch64igen.lo $coff"; target_size=64 ;;
+     aarch64_pe_le_vec)		 tb="$tb pe-aarch64.lo pe-aarch64igen.lo $coff"; target_size=64 ;;
++    aarch64_pe_big_vec)		 tb="$tb pe-aarch64.lo pe-aarch64igen.lo $coff"; target_size=64 ;;
+     alpha_ecoff_le_vec)		 tb="$tb coff-alpha.lo ecoff.lo $ecoff"; target_size=64 ;;
+     alpha_elf64_vec)		 tb="$tb elf64-alpha.lo elf64.lo $elf"; target_size=64 ;;
+     alpha_elf64_fbsd_vec)	 tb="$tb elf64-alpha.lo elf64.lo $elf"; target_size=64 ;;
+diff --git a/bfd/configure.ac b/bfd/configure.ac
+index 5879a04785d..9186937c567 100644
+--- a/bfd/configure.ac
++++ b/bfd/configure.ac
+@@ -416,6 +416,7 @@ do
+     aarch64_mach_o_vec)		 tb="$tb mach-o-aarch64.lo"; target_size=64 ;;
+     aarch64_pei_le_vec)		 tb="$tb pei-aarch64.lo pe-aarch64igen.lo $coff"; target_size=64 ;;
+     aarch64_pe_le_vec)		 tb="$tb pe-aarch64.lo pe-aarch64igen.lo $coff"; target_size=64 ;;
++    aarch64_pe_big_vec)		 tb="$tb pe-aarch64.lo pe-aarch64igen.lo $coff"; target_size=64 ;;
+     alpha_ecoff_le_vec)		 tb="$tb coff-alpha.lo ecoff.lo $ecoff"; target_size=64 ;;
+     alpha_elf64_vec)		 tb="$tb elf64-alpha.lo elf64.lo $elf"; target_size=64 ;;
+     alpha_elf64_fbsd_vec)	 tb="$tb elf64-alpha.lo elf64.lo $elf"; target_size=64 ;;
+diff --git a/bfd/cpu-aarch64.c b/bfd/cpu-aarch64.c
+index 51bdfc9d152..ff042a5650f 100644
+--- a/bfd/cpu-aarch64.c
++++ b/bfd/cpu-aarch64.c
+@@ -115,7 +115,7 @@ scan (const struct bfd_arch_info *info, const char *string)
+ }
+ 
+ /* Figure out if llp64 is default */
+-#if DEFAULT_VECTOR == aarch64_pe_le_vec
++#if DEFAULT_VECTOR == aarch64_pe_le_vec || DEFAULT_VECTOR == aarch64_pe_big_vec
+ #define LLP64_DEFAULT true
+ #define AARCH64_DEFAULT false
+ #else
+diff --git a/bfd/pe-aarch64.c b/bfd/pe-aarch64.c
+index 2204a51c509..e257beb8673 100644
+--- a/bfd/pe-aarch64.c
++++ b/bfd/pe-aarch64.c
+@@ -23,6 +23,8 @@
+ 
+ #define TARGET_SYM             aarch64_pe_le_vec
+ #define TARGET_NAME            "pe-aarch64-little"
++#define TARGET_SYM_BIG         aarch64_pe_big_vec
++#define TARGET_NAME_BIG        "pe-aarch64-bigobj"
+ #define TARGET_ARCHITECTURE    bfd_arch_aarch64
+ #define TARGET_PAGESIZE        4096
+ #define TARGET_BIG_ENDIAN      0
+@@ -32,6 +34,7 @@
+ /* Rename the above into.. */
+ #define COFF_WITH_peAArch64
+ #define COFF_WITH_PE
++#define COFF_WITH_PE_BIGOBJ
+ #define PCRELOFFSET       true
+ 
+ /* Long section names not allowed in executable images, only object files.  */
+diff --git a/bfd/targets.c b/bfd/targets.c
+index 23333701ec0..e53d5218b8b 100644
+--- a/bfd/targets.c
++++ b/bfd/targets.c
+@@ -682,6 +682,7 @@ extern const bfd_target aarch64_elf64_le_cloudabi_vec;
+ extern const bfd_target aarch64_mach_o_vec;
+ extern const bfd_target aarch64_pei_le_vec;
+ extern const bfd_target aarch64_pe_le_vec;
++extern const bfd_target aarch64_pe_big_vec;
+ extern const bfd_target alpha_ecoff_le_vec;
+ extern const bfd_target alpha_elf64_vec;
+ extern const bfd_target alpha_elf64_fbsd_vec;
+@@ -994,6 +995,7 @@ static const bfd_target * const _bfd_target_vector[] =
+ 	&aarch64_elf64_le_cloudabi_vec,
+ 	&aarch64_mach_o_vec,
+ 	&aarch64_pe_le_vec,
++	&aarch64_pe_big_vec,
+ 	&aarch64_pei_le_vec,
+ #endif
+ 
+diff --git a/gas/config/tc-aarch64.c b/gas/config/tc-aarch64.c
+index 96bfe74e4d3..1b340d78192 100644
+--- a/gas/config/tc-aarch64.c
++++ b/gas/config/tc-aarch64.c
+@@ -10210,6 +10210,11 @@ aarch64_after_parse_args (void)
+ #endif
+ }
+ 
++#ifdef OBJ_COFF
++/* Use big object file format.  */
++static int use_big_obj = 0;
++#endif
++
+ #ifdef OBJ_ELF
+ const char *
+ elf64_aarch64_target_format (void)
+@@ -10237,7 +10242,7 @@ aarch64elf_frob_symbol (symbolS * symp, int *puntp)
+ const char *
+ coff_aarch64_target_format (void)
+ {
+-  return "pe-aarch64-little";
++  return use_big_obj ? "pe-aarch64-bigobj" : "pe-aarch64-little";
+ }
+ #endif
+ 
+@@ -10584,6 +10589,7 @@ const char md_shortopts[] = "m:";
+ #define OPTION_EL (OPTION_MD_BASE + 1)
+ #endif
+ #endif
++#define OPTION_MBIG_OBJ (OPTION_MD_BASE + 2)
+ 
+ const struct option md_longopts[] = {
+ #ifdef OPTION_EB
+@@ -10591,6 +10597,9 @@ const struct option md_longopts[] = {
+ #endif
+ #ifdef OPTION_EL
+   {"EL", no_argument, NULL, OPTION_EL},
++#endif
++#ifdef OBJ_COFF
++  {"mbig-obj", no_argument, NULL, OPTION_MBIG_OBJ},
+ #endif
+   {NULL, no_argument, NULL, 0}
+ };
+@@ -11211,6 +11220,12 @@ md_parse_option (int c, const char *arg)
+       break;
+ #endif
+ 
++#ifdef OBJ_COFF
++    case OPTION_MBIG_OBJ:
++      use_big_obj = 1;
++      break;
++#endif
++
+     case 'a':
+       /* Listing option.  Just ignore these, we don't support additional
+          ones.  */
+@@ -11283,6 +11298,11 @@ md_show_usage (FILE * fp)
+   fprintf (fp, _("\
+   -EL                     assemble code for a little-endian cpu\n"));
+ #endif
++
++#ifdef OBJ_COFF
++  fprintf (fp, _("\
++  -mbig-obj               generate big object files\n"));
++#endif
+ }
+ 
+ /* Parse a .cpu directive.  */
+diff --git a/gas/testsuite/gas/pe/big-obj.d b/gas/testsuite/gas/pe/big-obj.d
+index 27b351a7d60..bde4e41e627 100644
+--- a/gas/testsuite/gas/pe/big-obj.d
++++ b/gas/testsuite/gas/pe/big-obj.d
+@@ -2,7 +2,7 @@
+ #objdump: -h
+ #name: PE big obj
+ 
+-.*: *file format pe-bigobj-.*
++.*: *file format (pe-bigobj-.*|pe-aarch64-bigobj)
+ 
+ Sections:
+ #...
+diff --git a/ld/pe-dll.c b/ld/pe-dll.c
+index 210b77ea374..e626caf0f20 100644
+--- a/ld/pe-dll.c
++++ b/ld/pe-dll.c
+@@ -359,6 +359,18 @@ static pe_details_type pe_detail_list[] =
+     false,
+     autofilter_symbollist_generic
+   },
++  {
++    "pei-aarch64-little",
++    "pe-aarch64-bigobj",
++    2,  /* IMAGE_REL_ARM64_ADDR32NB */
++    8,  /* IMAGE_REL_ARM64_SECREL */
++    11, /* IMAGE_REL_ARM64_SECREL_LOW12L */
++    13, /* IMAGE_REL_ARM64_SECTION */
++    PE_ARCH_aarch64,
++    bfd_arch_aarch64,
++    false,
++    autofilter_symbollist_generic
++  },
+   { NULL, NULL, 0, 0, 0, 0, 0, 0, false, NULL }
+ };
+ 
+-- 
+2.51.0
+

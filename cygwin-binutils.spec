@@ -2,8 +2,8 @@
 
 Name:           cygwin-binutils
 Version:        2.45.1
-Release:        1%{?dist}
-Summary:        Cross-compiled version of binutils for Cygwin environments
+Release:        2%{?dist}
+Summary:        Binutils for cross-compiling to Cygwin environments
 
 License:        GPLv2+ and LGPLv2+ and GPLv3+ and LGPLv3+
 Group:          Development/Libraries
@@ -11,9 +11,28 @@ Group:          Development/Libraries
 URL:            https://www.gnu.org/software/binutils/
 Source0:        https://ftp.gnu.org/gnu/binutils/binutils-%{version}.tar.xz
 Patch1:		binutils-2.45.1-cygwin-config-rpath.patch
+
+Patch101:       0001-WIP-fix-to-dll-relocations.patch
+Patch102:       0002-Add-error-messages-for-invalid-relocations.patch
+Patch103:       0003-aarch64-Fix-IMAGE_REL_ARM64_PAGEBASE_REL21-relocatio.patch
+Patch104:       0004-Add-big-object-support-for-aarch64-PE.patch
+
+Patch106:       0006-Add-aarch64-pc-cygwin-target.patch
+Patch107:       0007-Adjust-pdata-function-table-entries-sorting-for-AArc.patch
+Patch108:       0008-Define-unwinding-and-SEH-data-structures-for-aarch64.patch
+Patch109:       0009-Adjust-x64-SEH-implementation-for-AArch64.patch
+Patch110:       0010-Add-aarch64-specific-SEH-commands.patch
+Patch111:       0011-Write-SEH-records-to-pdata-xdata.patch
+Patch112:       0012-Apply-SEH-to-AArch64.patch
+Patch113:       0013-Fix-the-calculation-of-the-function-length.patch
+
+Patch115:       0015-Add-auto-import-support-to-AArch64-9.patch
+Patch116:       0016-ld-doc-Use-consistent-language-for-PE-target-only-op.patch
+Patch117:       0017-Fix-compilation-of-SEH-changes.patch
+Patch118:       0018-Drop-pep-dll-aarch64-x86_64-.c.patch
+
 Patch1000:      w32api-sysroot.patch
 Patch1001:      binutils-textdomain.patch
-
 
 BuildRequires:  gcc
 BuildRequires:  gettext-devel
@@ -23,6 +42,7 @@ BuildRequires:  texinfo
 BuildRequires:  zlib-devel
 BuildRequires:  cygwin32-filesystem >= 7
 BuildRequires:  cygwin64-filesystem >= 7
+BuildRequires:  cygwin-aarch64-filesystem >= 151
 %if %{run_testsuite}
 BuildRequires:  dejagnu
 BuildRequires:  sharutils
@@ -34,30 +54,40 @@ Cross compiled binutils (utilities like 'strip', 'as', 'ld') which
 understand Cygwin executables and DLLs.
 
 %package -n cygwin-binutils-generic
-Summary:        Utilities which are needed for both the Cygwin32 and Cygwin64 toolchains
+Summary:        Utilities which are needed for all the Cygwin cross-toolchains
 
 %description -n cygwin-binutils-generic
 Utilities (like strip and objdump) which are needed for
-both the Cygwin32 and Cygwin64 toolchains
+all the Cygwin cross-toolchains
 
 %package -n cygwin32-binutils
-Summary:        Cross-compiled version of binutils for the Cygwin32 environment
+Summary:        Binutils for cross-compiling to the x86 Cygwin environment
 Requires:       cygwin-binutils-generic = %{version}-%{release}
 Requires:       cygwin32-filesystem >= 7
 Provides:       cygwin-binutils = %{version}-%{release}
 Obsoletes:      cygwin-binutils < %{version}-%{release}
 
 %description -n cygwin32-binutils
-Cross compiled binutils (utilities like 'strip', 'as', 'ld') which
+Cross compiling binutils (utilities like 'strip', 'as', 'ld') which
 understand Cygwin executables and DLLs.
 
 %package -n cygwin64-binutils
-Summary:        Cross-compiled version of binutils for the Cygwin64 environment
+Summary:        Binutils for cross-compiling to the x86_64 Cygwin environment
 Requires:       cygwin-binutils-generic = %{version}-%{release}
 Requires:       cygwin64-filesystem >= 7
 
 %description -n cygwin64-binutils
-Cross compiled binutils (utilities like 'strip', 'as', 'ld') which
+Cross compiling binutils (utilities like 'strip', 'as', 'ld') which
+understand Cygwin executables and DLLs.
+
+
+%package -n cygwin-aarch64-binutils
+Summary:        Binutils for cross-compiling to the aarch64 Cygwin environment
+Requires:       cygwin-binutils-generic = %{version}-%{release}
+Requires:       cygwin-aarch64-filesystem >= 151
+
+%description -n cygwin-aarch64-binutils
+Cross compiling binutils (utilities like 'strip', 'as', 'ld') which
 understand Cygwin executables and DLLs.
 
 
@@ -110,6 +140,28 @@ CFLAGS="$RPM_OPT_FLAGS" \
 make all %{?_smp_mflags}
 popd
 
+mkdir build_cygaarch64
+pushd build_cygaarch64
+CFLAGS="$RPM_OPT_FLAGS" \
+../configure \
+  --build=%_build --host=%_host \
+  --target=%{cygwin_aarch64_target} \
+  --with-sysroot=%{cygwin_aarch64_sysroot} \
+  --prefix=%{_prefix} \
+  --bindir=%{_bindir} \
+  --includedir=%{_includedir} \
+  --libdir=%{_libdir} \
+  --mandir=%{_mandir} \
+  --infodir=%{_infodir} \
+  --with-system-zlib \
+  --disable-gdb \
+  --disable-libdecnumber \
+  --disable-readline \
+  --disable-sim
+
+make all %{?_smp_mflags}
+popd
+
 # Create multilib versions for the tools strip, objdump and objcopy
 mkdir build_multilib
 pushd build_multilib
@@ -117,7 +169,7 @@ CFLAGS="$RPM_OPT_FLAGS" \
 ../configure \
   --build=%_build --host=%_host \
   --target=%{cygwin64_target} \
-  --enable-targets=%{cygwin64_target},%{cygwin32_target} \
+  --enable-targets=%{cygwin64_target},%{cygwin32_target},%{cygwin_aarch64_target} \
   --with-sysroot=%{cygwin64_sysroot} \
   --prefix=%{_prefix} \
   --bindir=%{_bindir} \
@@ -172,6 +224,7 @@ popd
 %install
 make -C build_cyg32 install DESTDIR=$RPM_BUILD_ROOT
 make -C build_cyg64 install DESTDIR=$RPM_BUILD_ROOT
+make -C build_cygaarch64 install DESTDIR=$RPM_BUILD_ROOT
 make -C build_multilib install DESTDIR=$RPM_BUILD_ROOT/multilib
 
 # These files conflict with ordinary binutils.
@@ -180,7 +233,7 @@ rm -f $RPM_BUILD_ROOT%{_libdir}/bfd-plugins/libdep.*
 
 # Keep the multilib versions of the strip, objdump and objcopy commands
 # We need these for the RPM integration as these tools must be able to
-# both process Cygwin32 and Cygwin64 binaries
+# both process all Cygwin binaries
 mv $RPM_BUILD_ROOT/multilib%{_bindir}/%{cygwin64_strip} $RPM_BUILD_ROOT%{_bindir}/%{cygwin_strip}
 mv $RPM_BUILD_ROOT/multilib%{_bindir}/%{cygwin64_objdump} $RPM_BUILD_ROOT%{_bindir}/%{cygwin_objdump}
 mv $RPM_BUILD_ROOT/multilib%{_bindir}/%{cygwin64_objcopy} $RPM_BUILD_ROOT%{_bindir}/%{cygwin_objcopy}
@@ -273,6 +326,40 @@ cat cygwin-opcodes.lang >> cygwin-binutils.lang
 %{_prefix}/%{cygwin64_target}/bin/readelf
 %{_prefix}/%{cygwin64_target}/bin/strip
 %{_prefix}/%{cygwin64_target}/lib/ldscripts
+
+%files -n cygwin-aarch64-binutils
+%{_bindir}/%{cygwin_aarch64_target}-addr2line
+%{_bindir}/%{cygwin_aarch64_target}-ar
+%{_bindir}/%{cygwin_aarch64_target}-as
+%{_bindir}/%{cygwin_aarch64_target}-c++filt
+%{_bindir}/%{cygwin_aarch64_target}-dlltool
+%{_bindir}/%{cygwin_aarch64_target}-dllwrap
+%{_bindir}/%{cygwin_aarch64_target}-elfedit
+%{_bindir}/%{cygwin_aarch64_target}-gprof
+%{_bindir}/%{cygwin_aarch64_target}-ld
+%{_bindir}/%{cygwin_aarch64_target}-ld.bfd
+%{_bindir}/%{cygwin_aarch64_target}-nm
+%{_bindir}/%{cygwin_aarch64_target}-objcopy
+%{_bindir}/%{cygwin_aarch64_target}-objdump
+%{_bindir}/%{cygwin_aarch64_target}-ranlib
+%{_bindir}/%{cygwin_aarch64_target}-readelf
+%{_bindir}/%{cygwin_aarch64_target}-size
+%{_bindir}/%{cygwin_aarch64_target}-strings
+%{_bindir}/%{cygwin_aarch64_target}-strip
+%{_bindir}/%{cygwin_aarch64_target}-windmc
+%{_bindir}/%{cygwin_aarch64_target}-windres
+%{_prefix}/%{cygwin_aarch64_target}/bin/ar
+%{_prefix}/%{cygwin_aarch64_target}/bin/as
+%{_prefix}/%{cygwin_aarch64_target}/bin/dlltool
+%{_prefix}/%{cygwin_aarch64_target}/bin/ld
+%{_prefix}/%{cygwin_aarch64_target}/bin/ld.bfd
+%{_prefix}/%{cygwin_aarch64_target}/bin/nm
+%{_prefix}/%{cygwin_aarch64_target}/bin/objcopy
+%{_prefix}/%{cygwin_aarch64_target}/bin/objdump
+%{_prefix}/%{cygwin_aarch64_target}/bin/ranlib
+%{_prefix}/%{cygwin_aarch64_target}/bin/readelf
+%{_prefix}/%{cygwin_aarch64_target}/bin/strip
+%{_prefix}/%{cygwin_aarch64_target}/lib/ldscripts
 
 
 %changelog
