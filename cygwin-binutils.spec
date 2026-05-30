@@ -2,7 +2,7 @@
 
 Name:           cygwin-binutils
 Version:        2.46.0
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        Binutils for cross-compiling to Cygwin environments
 
 License:        GPLv2+ and LGPLv2+ and GPLv3+ and LGPLv3+
@@ -29,7 +29,7 @@ Patch114:       0014-Add-auto-import-support-to-AArch64-9.patch
 Patch115:       0015-Support-relocation-for-weak-references-4-1.patch
 Patch116:       0016-Fix-SEH-unwind-code-mapping-2.patch
 
-#Patch118:       0018-Drop-pep-dll-aarch64-x86_64-.c.patch
+Patch118:       0018-Drop-pep-dll-aarch64-x86_64-.c.patch
 
 Patch1000:      w32api-sysroot.patch
 Patch1001:      binutils-textdomain.patch
