@@ -1,7 +1,7 @@
-From fc28f2e4cb45497bbdbfb792a6437ca4fed0fab8 Mon Sep 17 00:00:00 2001
+From 667c4fb3223177a2b159665b1c8bafba0dae47a0 Mon Sep 17 00:00:00 2001
 From: Evgeny Karpov <eukarpov@gmail.com>
 Date: Tue, 9 Jul 2024 16:05:29 +0200
-Subject: [PATCH 03/18] aarch64: Fix IMAGE_REL_ARM64_PAGEBASE_REL21 relocation
+Subject: [PATCH 03/16] aarch64: Fix IMAGE_REL_ARM64_PAGEBASE_REL21 relocation
  and symbol reduction for relocations (#2)
 
 Initially, the change was to fix IMAGE_REL_ARM64_PAGEBASE_REL21, which was addressing only 1MB instead of 4GB.
@@ -33,10 +33,10 @@ Relocation overflow issue when building FFmpeg with -O3
  5 files changed, 38 insertions(+), 20 deletions(-)
 
 diff --git a/bfd/coff-aarch64.c b/bfd/coff-aarch64.c
-index af4a44dede0..920378c9a2c 100644
+index c00448efc82..0d33c9424b9 100644
 --- a/bfd/coff-aarch64.c
 +++ b/bfd/coff-aarch64.c
-@@ -579,8 +579,7 @@ coff_pe_aarch64_relocate_section (bfd *output_bfd,
+@@ -578,8 +578,7 @@ coff_pe_aarch64_relocate_section (bfd *output_bfd,
  		input_section, rel->r_vaddr - input_section->vma);
  
  	    bfd_putl32 (val, contents + rel->r_vaddr);
@@ -46,7 +46,7 @@ index af4a44dede0..920378c9a2c 100644
  	    break;
  	  }
  
-@@ -614,7 +613,7 @@ coff_pe_aarch64_relocate_section (bfd *output_bfd,
+@@ -613,7 +612,7 @@ coff_pe_aarch64_relocate_section (bfd *output_bfd,
  	    opcode |= val & 0x3ffffff;
  
  	    bfd_putl32 (opcode, contents + rel->r_vaddr);
@@ -55,7 +55,7 @@ index af4a44dede0..920378c9a2c 100644
  
  	    break;
  	  }
-@@ -649,8 +648,7 @@ coff_pe_aarch64_relocate_section (bfd *output_bfd,
+@@ -648,8 +647,7 @@ coff_pe_aarch64_relocate_section (bfd *output_bfd,
  	    opcode |= (val & 0x7ffff) << 5;
  
  	    bfd_putl32 (opcode, contents + rel->r_vaddr);
@@ -65,7 +65,7 @@ index af4a44dede0..920378c9a2c 100644
  	    break;
  	  }
  
-@@ -684,8 +682,7 @@ coff_pe_aarch64_relocate_section (bfd *output_bfd,
+@@ -683,8 +681,7 @@ coff_pe_aarch64_relocate_section (bfd *output_bfd,
  	    opcode |= (val & 0x3fff) << 5;
  
  	    bfd_putl32 (opcode, contents + rel->r_vaddr);
@@ -75,7 +75,7 @@ index af4a44dede0..920378c9a2c 100644
  	    break;
  	  }
  
-@@ -721,7 +718,7 @@ coff_pe_aarch64_relocate_section (bfd *output_bfd,
+@@ -720,7 +717,7 @@ coff_pe_aarch64_relocate_section (bfd *output_bfd,
  	    opcode |= (val & 0x1ffffc) << 3;
  
  	    bfd_putl32 (opcode, contents + rel->r_vaddr);
@@ -84,7 +84,7 @@ index af4a44dede0..920378c9a2c 100644
  
  	    break;
  	  }
-@@ -758,8 +755,7 @@ coff_pe_aarch64_relocate_section (bfd *output_bfd,
+@@ -757,8 +754,7 @@ coff_pe_aarch64_relocate_section (bfd *output_bfd,
  	    opcode |= (val & 0x1ffffc) << 3;
  
  	    bfd_putl32 (opcode, contents + rel->r_vaddr);
@@ -94,7 +94,7 @@ index af4a44dede0..920378c9a2c 100644
  	    break;
  	  }
  
-@@ -787,8 +783,7 @@ coff_pe_aarch64_relocate_section (bfd *output_bfd,
+@@ -786,8 +782,7 @@ coff_pe_aarch64_relocate_section (bfd *output_bfd,
  		input_section, rel->r_vaddr - input_section->vma);
  
  	    bfd_putl32 (val, contents + rel->r_vaddr);
@@ -104,7 +104,7 @@ index af4a44dede0..920378c9a2c 100644
  	    break;
  	  }
  
-@@ -832,8 +827,7 @@ coff_pe_aarch64_relocate_section (bfd *output_bfd,
+@@ -831,8 +826,7 @@ coff_pe_aarch64_relocate_section (bfd *output_bfd,
  	    opcode |= val << 10;
  
  	    bfd_putl32 (opcode, contents + rel->r_vaddr);
@@ -114,7 +114,7 @@ index af4a44dede0..920378c9a2c 100644
  	    break;
  	  }
  
-@@ -855,8 +849,7 @@ coff_pe_aarch64_relocate_section (bfd *output_bfd,
+@@ -854,8 +848,7 @@ coff_pe_aarch64_relocate_section (bfd *output_bfd,
  	    opcode |= val << 10;
  
  	    bfd_putl32 (opcode, contents + rel->r_vaddr);
@@ -124,7 +124,7 @@ index af4a44dede0..920378c9a2c 100644
  	    break;
  	  }
  
-@@ -876,8 +869,7 @@ coff_pe_aarch64_relocate_section (bfd *output_bfd,
+@@ -875,8 +868,7 @@ coff_pe_aarch64_relocate_section (bfd *output_bfd,
  		input_section, rel->r_vaddr - input_section->vma);
  
  	    bfd_putl32 (val, contents + rel->r_vaddr);
@@ -134,7 +134,7 @@ index af4a44dede0..920378c9a2c 100644
  	    break;
  	  }
  
-@@ -901,8 +893,7 @@ coff_pe_aarch64_relocate_section (bfd *output_bfd,
+@@ -900,8 +892,7 @@ coff_pe_aarch64_relocate_section (bfd *output_bfd,
  
  
  	    bfd_putl16 (idx, contents + rel->r_vaddr);
@@ -145,10 +145,10 @@ index af4a44dede0..920378c9a2c 100644
  	  }
  
 diff --git a/bfd/cofflink.c b/bfd/cofflink.c
-index 38278e230da..5c7c12277a9 100644
+index 02b68814ab4..461981981af 100644
 --- a/bfd/cofflink.c
 +++ b/bfd/cofflink.c
-@@ -2973,6 +2973,9 @@ _bfd_coff_generic_relocate_section (bfd *output_bfd,
+@@ -2966,6 +2966,9 @@ _bfd_coff_generic_relocate_section (bfd *output_bfd,
  
        symndx = rel->r_symndx;
  
@@ -159,7 +159,7 @@ index 38278e230da..5c7c12277a9 100644
  	{
  	  h = NULL;
 diff --git a/gas/symbols.c b/gas/symbols.c
-index 275d056cd42..cc6b8e4e7ee 100644
+index 5ad5dbb2dd9..5c5e8022374 100644
 --- a/gas/symbols.c
 +++ b/gas/symbols.c
 @@ -2403,6 +2403,25 @@ S_IS_DEBUG (const symbolS *s)
@@ -189,7 +189,7 @@ index 275d056cd42..cc6b8e4e7ee 100644
  S_IS_LOCAL (const symbolS *s)
  {
 diff --git a/gas/symbols.h b/gas/symbols.h
-index 75d014ce8ce..40585eecdc6 100644
+index 382af5dfd24..bf03b9e961e 100644
 --- a/gas/symbols.h
 +++ b/gas/symbols.h
 @@ -133,6 +133,8 @@ extern void S_SET_THREAD_LOCAL (symbolS *);
@@ -202,10 +202,10 @@ index 75d014ce8ce..40585eecdc6 100644
  #ifndef WORKING_DOT_WORD
  struct broken_word
 diff --git a/gas/write.c b/gas/write.c
-index c56ad28ea51..30f41109022 100644
+index 3494871270a..3c6f46d1f2c 100644
 --- a/gas/write.c
 +++ b/gas/write.c
-@@ -900,6 +900,9 @@ adjust_reloc_syms (bfd *abfd ATTRIBUTE_UNUSED,
+@@ -909,6 +909,9 @@ adjust_reloc_syms (bfd *abfd ATTRIBUTE_UNUSED,
  	if ((symsec->flags & SEC_THREAD_LOCAL) != 0)
  	  continue;
  

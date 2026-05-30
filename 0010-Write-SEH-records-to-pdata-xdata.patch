@@ -1,7 +1,7 @@
-From 1e74c5485547b63fb19899d735454c7ac9328fdf Mon Sep 17 00:00:00 2001
+From e1cacc1c83fc937a2fbae816dc0f31bfab9fc802 Mon Sep 17 00:00:00 2001
 From: Evgeny Karpov <evgeny.karpov@microsoft.com>
 Date: Tue, 10 Dec 2024 20:48:59 +0100
-Subject: [PATCH 11/18] Write SEH records to pdata/xdata
+Subject: [PATCH 10/16] Write SEH records to pdata/xdata
 
 The patch emits the required records to the pdata/xdata sections that contain
 unwinding information for SEH.
@@ -19,7 +19,7 @@ gas/ChangeLog:
  1 file changed, 306 insertions(+), 8 deletions(-)
 
 diff --git a/gas/config/obj-coff-seh.c b/gas/config/obj-coff-seh.c
-index caaf780e1bf..914632eadca 100644
+index da557004f56..415b2b72599 100644
 --- a/gas/config/obj-coff-seh.c
 +++ b/gas/config/obj-coff-seh.c
 @@ -561,13 +561,23 @@ static void

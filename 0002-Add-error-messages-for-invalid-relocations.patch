@@ -1,7 +1,7 @@
-From b9d88b3e74d27969a70226c93ba5ee86a69e57ed Mon Sep 17 00:00:00 2001
+From 8ed8972d3631e57a07ffa850147b4a833989c293 Mon Sep 17 00:00:00 2001
 From: Zac Walker <zac.walker@linaro.org>
 Date: Wed, 11 Oct 2023 13:04:45 +0200
-Subject: [PATCH 02/18] Add error messages for invalid relocations.
+Subject: [PATCH 02/16] Add error messages for invalid relocations.
 
 ---
  bfd/reloc.c         | 8 ++++++++
@@ -9,7 +9,7 @@ Subject: [PATCH 02/18] Add error messages for invalid relocations.
  2 files changed, 8 insertions(+), 3 deletions(-)
 
 diff --git a/bfd/reloc.c b/bfd/reloc.c
-index c9d53bb9e11..9de1d6c617c 100644
+index 98343696a33..5e8bbfcb271 100644
 --- a/bfd/reloc.c
 +++ b/bfd/reloc.c
 @@ -1208,6 +1208,14 @@ _bfd_relocate_contents (reloc_howto_type *howto,
@@ -28,10 +28,10 @@ index c9d53bb9e11..9de1d6c617c 100644
    x = read_reloc (input_bfd, location, howto);
  
 diff --git a/ld/emultempl/pep.em b/ld/emultempl/pep.em
-index 2ed4a22be63..85c338fd95f 100644
+index 718441662b0..126b71f0df1 100644
 --- a/ld/emultempl/pep.em
 +++ b/ld/emultempl/pep.em
-@@ -1183,9 +1183,6 @@ read_addend (arelent *rel, asection *s)
+@@ -1185,9 +1185,6 @@ read_addend (arelent *rel, asection *s)
  	    addend = bfd_get_16 (s->owner, buf);
  	}
        break;

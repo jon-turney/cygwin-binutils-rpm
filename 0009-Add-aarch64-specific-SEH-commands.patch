@@ -1,7 +1,7 @@
-From b4fa2367f76263c2bd104da5cf9fc28bba1deb65 Mon Sep 17 00:00:00 2001
+From 3b1a5ceb49d89fc4bb532b2cb7744e2597e5601f Mon Sep 17 00:00:00 2001
 From: Evgeny Karpov <evgeny.karpov@microsoft.com>
 Date: Tue, 10 Dec 2024 19:39:50 +0100
-Subject: [PATCH 10/18] Add aarch64-specific SEH commands
+Subject: [PATCH 09/16] Add aarch64-specific SEH commands
 
 Implementation for aarch64 contains SEH commands that are not present for
 x64 architecture, such as .seh_startepilogue/.seh_endepilogue,
@@ -18,7 +18,7 @@ gas/ChangeLog:
  1 file changed, 138 insertions(+)
 
 diff --git a/gas/config/obj-coff-seh.c b/gas/config/obj-coff-seh.c
-index 3d429df2425..caaf780e1bf 100644
+index d7d8453b1be..da557004f56 100644
 --- a/gas/config/obj-coff-seh.c
 +++ b/gas/config/obj-coff-seh.c
 @@ -671,6 +671,86 @@ obj_coff_seh_endprologue (int what ATTRIBUTE_UNUSED)

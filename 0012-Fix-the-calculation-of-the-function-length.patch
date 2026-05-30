@@ -1,7 +1,7 @@
-From c90bd97a5cd30d7cb2a3be0401e28d0842e001ba Mon Sep 17 00:00:00 2001
+From e8150a4af41d700885366d88b768251f076c263a Mon Sep 17 00:00:00 2001
 From: Evgeny Karpov <evgeny.karpov@microsoft.com>
 Date: Mon, 10 Mar 2025 14:11:37 +0100
-Subject: [PATCH 13/18] Fix the calculation of the function length
+Subject: [PATCH 12/16] Fix the calculation of the function length
 
 The patch fixes an issue where alignment is applied in the middle of
 executed code, affecting the calculation of the function length.
@@ -15,7 +15,7 @@ gas/ChangeLog:
  1 file changed, 7 insertions(+), 1 deletion(-)
 
 diff --git a/gas/config/tc-aarch64.h b/gas/config/tc-aarch64.h
-index fce34ed48d1..0ed42ebccc9 100644
+index d1fb4c9058b..03e0fe03cfc 100644
 --- a/gas/config/tc-aarch64.h
 +++ b/gas/config/tc-aarch64.h
 @@ -210,10 +210,16 @@ struct aarch64_frag_type

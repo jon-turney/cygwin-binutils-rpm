@@ -1,7 +1,7 @@
-From 606a6149e8c2538b75d378ae06dae0844cccf258 Mon Sep 17 00:00:00 2001
+From b62648f802aa65fcd66c4393508095cf5c748754 Mon Sep 17 00:00:00 2001
 From: Evgeny Karpov <evgeny.karpov@microsoft.com>
 Date: Tue, 10 Dec 2024 21:33:22 +0100
-Subject: [PATCH 12/18] Apply SEH to AArch64
+Subject: [PATCH 11/16] Apply SEH to AArch64
 
 This change introduces the required commands for SEH on AArch64.
 
@@ -13,7 +13,7 @@ gas/ChangeLog:
  1 file changed, 31 insertions(+)
 
 diff --git a/gas/config/obj-coff-seh.h b/gas/config/obj-coff-seh.h
-index 30042cdeebf..49f421eb0a2 100644
+index e5ba8daa7ae..46f3dd2a196 100644
 --- a/gas/config/obj-coff-seh.h
 +++ b/gas/config/obj-coff-seh.h
 @@ -113,6 +113,37 @@ typedef enum seh_arm64_unwind_types

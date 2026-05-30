@@ -1,7 +1,7 @@
-From 55158475f2c4cabf5bf301dc517c2d74b7551443 Mon Sep 17 00:00:00 2001
+From 2a420395048e69b110d91c2d1fc3e0ca135427c7 Mon Sep 17 00:00:00 2001
 From: Evgeny Karpov <evgeny.karpov@microsoft.com>
 Date: Tue, 10 Dec 2024 19:24:19 +0100
-Subject: [PATCH 09/18] Adjust x64 SEH implementation for AArch64
+Subject: [PATCH 08/16] Adjust x64 SEH implementation for AArch64
 
 This patch defines the required unwind codes for AArch64 and updates handlers
 for SEH commands that are used by both x64 and AArch64.
@@ -25,7 +25,7 @@ gas/ChangeLog:
  2 files changed, 238 insertions(+), 28 deletions(-)
 
 diff --git a/gas/config/obj-coff-seh.c b/gas/config/obj-coff-seh.c
-index 1607a430cf6..3d429df2425 100644
+index 7479d3ee6b5..d7d8453b1be 100644
 --- a/gas/config/obj-coff-seh.c
 +++ b/gas/config/obj-coff-seh.c
 @@ -28,6 +28,20 @@ struct seh_seg_list {
@@ -421,10 +421,10 @@ index 1607a430cf6..3d429df2425 100644
  /* Data writing routines.  */
  
 diff --git a/gas/config/obj-coff-seh.h b/gas/config/obj-coff-seh.h
-index 7d7adbd30c5..30042cdeebf 100644
+index dced57c7b3b..e5ba8daa7ae 100644
 --- a/gas/config/obj-coff-seh.h
 +++ b/gas/config/obj-coff-seh.h
-@@ -254,18 +254,20 @@ typedef enum seh_kind {
+@@ -256,18 +256,20 @@ typedef enum seh_kind {
  
  /* Forward declarations.  */
  static void obj_coff_seh_stackalloc (int);

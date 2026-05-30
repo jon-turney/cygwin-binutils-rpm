@@ -1,66 +1,78 @@
+diff --git a/bfd/configure b/bfd/configure
+index 49d16fd4410..b1bc3ca2ea6 100755
 --- a/bfd/configure
 +++ b/bfd/configure
-@@ -3183,7 +3183,7 @@ fi
+@@ -3202,7 +3202,7 @@ fi
  
  
  # Define the identity of the package.
 - PACKAGE='bfd'
-+ PACKAGE=cygwin-bfd
-  VERSION='2.45.1'
++ PACKAGE='cygwin-bfd'
+  VERSION='2.46.0'
  
  
+diff --git a/binutils/configure b/binutils/configure
+index 5f099b4ce84..85ccd5b7649 100755
 --- a/binutils/configure
 +++ b/binutils/configure
-@@ -3080,7 +3080,7 @@ fi
+@@ -3091,7 +3091,7 @@ fi
  
  
  # Define the identity of the package.
 - PACKAGE='binutils'
-+ PACKAGE=cygwin-binutils
-  VERSION='2.45.1'
++ PACKAGE='cygwin-binutils'
+  VERSION='2.46.0'
  
  
+diff --git a/gas/configure b/gas/configure
+index b97a2c6e6b6..d75a724c596 100755
 --- a/gas/configure
 +++ b/gas/configure
-@@ -2989,7 +2989,7 @@ fi
+@@ -3011,7 +3011,7 @@ fi
  
  
  # Define the identity of the package.
 - PACKAGE='gas'
-+ PACKAGE=cygwin-gas
-  VERSION='2.45.1'
++ PACKAGE='cygwin-gas'
+  VERSION='2.46.0'
  
  
+diff --git a/gprof/configure b/gprof/configure
+index 909b27611fa..c3e55bc779b 100755
 --- a/gprof/configure
 +++ b/gprof/configure
-@@ -2863,7 +2863,7 @@ fi
+@@ -2886,7 +2886,7 @@ fi
  
  
  # Define the identity of the package.
 - PACKAGE='gprof'
-+ PACKAGE=cygwin-gprof
-  VERSION='2.45.1'
++ PACKAGE='cygwin-gprof'
+  VERSION='2.46.0'
  
  
+diff --git a/ld/configure b/ld/configure
+index 855844025c2..7211e4dd6a7 100755
 --- a/ld/configure
 +++ b/ld/configure
-@@ -3358,7 +3358,7 @@ fi
+@@ -3212,7 +3212,7 @@ fi
  
  
  # Define the identity of the package.
 - PACKAGE='ld'
-+ PACKAGE=cygwin-ld
-  VERSION='2.45.1'
++ PACKAGE='cygwin-ld'
+  VERSION='2.46.0'
  
  
+diff --git a/opcodes/configure b/opcodes/configure
+index 2572afc5375..0ae2b3a80c1 100755
 --- a/opcodes/configure
 +++ b/opcodes/configure
-@@ -3117,7 +3117,7 @@ fi
+@@ -2951,7 +2951,7 @@ fi
  
  
  # Define the identity of the package.
 - PACKAGE='opcodes'
-+ PACKAGE=cygwin-opcodes
-  VERSION='2.45.1'
++ PACKAGE='cygwin-opcodes'
+  VERSION='2.46.0'
  
  

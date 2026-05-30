@@ -1,8 +1,8 @@
 %global run_testsuite 0
 
 Name:           cygwin-binutils
-Version:        2.45.1
-Release:        2%{?dist}
+Version:        2.46.0
+Release:        1%{?dist}
 Summary:        Binutils for cross-compiling to Cygwin environments
 
 License:        GPLv2+ and LGPLv2+ and GPLv3+ and LGPLv3+
@@ -15,21 +15,21 @@ Patch1:		binutils-2.45.1-cygwin-config-rpath.patch
 Patch101:       0001-WIP-fix-to-dll-relocations.patch
 Patch102:       0002-Add-error-messages-for-invalid-relocations.patch
 Patch103:       0003-aarch64-Fix-IMAGE_REL_ARM64_PAGEBASE_REL21-relocatio.patch
-Patch104:       0004-Add-big-object-support-for-aarch64-PE.patch
 
-Patch106:       0006-Add-aarch64-pc-cygwin-target.patch
-Patch107:       0007-Adjust-pdata-function-table-entries-sorting-for-AArc.patch
-Patch108:       0008-Define-unwinding-and-SEH-data-structures-for-aarch64.patch
-Patch109:       0009-Adjust-x64-SEH-implementation-for-AArch64.patch
-Patch110:       0010-Add-aarch64-specific-SEH-commands.patch
-Patch111:       0011-Write-SEH-records-to-pdata-xdata.patch
-Patch112:       0012-Apply-SEH-to-AArch64.patch
-Patch113:       0013-Fix-the-calculation-of-the-function-length.patch
+Patch105:       0005-Add-aarch64-pc-cygwin-target.patch
+Patch106:       0006-Adjust-pdata-function-table-entries-sorting-for-AArc.patch
+Patch107:       0007-Define-unwinding-and-SEH-data-structures-for-aarch64.patch
+Patch108:       0008-Adjust-x64-SEH-implementation-for-AArch64.patch
+Patch109:       0009-Add-aarch64-specific-SEH-commands.patch
+Patch110:       0010-Write-SEH-records-to-pdata-xdata.patch
+Patch111:       0011-Apply-SEH-to-AArch64.patch
+Patch112:       0012-Fix-the-calculation-of-the-function-length.patch
 
-Patch115:       0015-Add-auto-import-support-to-AArch64-9.patch
-Patch116:       0016-ld-doc-Use-consistent-language-for-PE-target-only-op.patch
-Patch117:       0017-Fix-compilation-of-SEH-changes.patch
-Patch118:       0018-Drop-pep-dll-aarch64-x86_64-.c.patch
+Patch114:       0014-Add-auto-import-support-to-AArch64-9.patch
+Patch115:       0015-Support-relocation-for-weak-references-4-1.patch
+Patch116:       0016-Fix-SEH-unwind-code-mapping-2.patch
+
+#Patch118:       0018-Drop-pep-dll-aarch64-x86_64-.c.patch
 
 Patch1000:      w32api-sysroot.patch
 Patch1001:      binutils-textdomain.patch
@@ -98,7 +98,7 @@ understand Cygwin executables and DLLs.
 %build
 mkdir build_cyg32
 pushd build_cyg32
-CFLAGS="$RPM_OPT_FLAGS" \
+CFLAGS="$RPM_OPT_FLAGS -Wno-error" \
 ../configure \
   --build=%_build --host=%_host \
   --target=%{cygwin32_target} \
@@ -120,7 +120,7 @@ popd
 
 mkdir build_cyg64
 pushd build_cyg64
-CFLAGS="$RPM_OPT_FLAGS" \
+CFLAGS="$RPM_OPT_FLAGS -Wno-error" \
 ../configure \
   --build=%_build --host=%_host \
   --target=%{cygwin64_target} \
@@ -142,7 +142,7 @@ popd
 
 mkdir build_cygaarch64
 pushd build_cygaarch64
-CFLAGS="$RPM_OPT_FLAGS" \
+CFLAGS="$RPM_OPT_FLAGS -Wno-error" \
 ../configure \
   --build=%_build --host=%_host \
   --target=%{cygwin_aarch64_target} \
@@ -165,7 +165,7 @@ popd
 # Create multilib versions for the tools strip, objdump and objcopy
 mkdir build_multilib
 pushd build_multilib
-CFLAGS="$RPM_OPT_FLAGS" \
+CFLAGS="$RPM_OPT_FLAGS -Wno-error" \
 ../configure \
   --build=%_build --host=%_host \
   --target=%{cygwin64_target} \
@@ -291,6 +291,7 @@ cat cygwin-opcodes.lang >> cygwin-binutils.lang
 %{_prefix}/%{cygwin32_target}/bin/ranlib
 %{_prefix}/%{cygwin32_target}/bin/readelf
 %{_prefix}/%{cygwin32_target}/bin/strip
+%{_prefix}/%{cygwin32_target}/bin/windres
 %{_prefix}/%{cygwin32_target}/lib/ldscripts
 
 %files -n cygwin64-binutils
@@ -325,6 +326,7 @@ cat cygwin-opcodes.lang >> cygwin-binutils.lang
 %{_prefix}/%{cygwin64_target}/bin/ranlib
 %{_prefix}/%{cygwin64_target}/bin/readelf
 %{_prefix}/%{cygwin64_target}/bin/strip
+%{_prefix}/%{cygwin64_target}/bin/windres
 %{_prefix}/%{cygwin64_target}/lib/ldscripts
 
 %files -n cygwin-aarch64-binutils
@@ -359,6 +361,7 @@ cat cygwin-opcodes.lang >> cygwin-binutils.lang
 %{_prefix}/%{cygwin_aarch64_target}/bin/ranlib
 %{_prefix}/%{cygwin_aarch64_target}/bin/readelf
 %{_prefix}/%{cygwin_aarch64_target}/bin/strip
+%{_prefix}/%{cygwin_aarch64_target}/bin/windres
 %{_prefix}/%{cygwin_aarch64_target}/lib/ldscripts
 
 

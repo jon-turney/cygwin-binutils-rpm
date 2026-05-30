@@ -1,7 +1,7 @@
-From cf6640139cc24c1ac4e1fff161a89198edebea9a Mon Sep 17 00:00:00 2001
+From b3c72326500842a004dedc86639475961f0cba25 Mon Sep 17 00:00:00 2001
 From: Evgeny Karpov <evgeny.karpov@microsoft.com>
 Date: Thu, 6 Feb 2025 18:32:49 +0100
-Subject: [PATCH 08/18] Define unwinding and SEH data structures for aarch64
+Subject: [PATCH 07/16] Define unwinding and SEH data structures for aarch64
 
 This patch adds unwinding codes and records that are needed to emit
 SEH data to pdata and xdata sections, and an arm64 context to store
@@ -34,11 +34,11 @@ gas/ChangeLog:
 	(ARM64_UNOP_SAVENEXT): New.
 	(ARM64_UNOP_PACSIGNLR): New.
 ---
- gas/config/obj-coff-seh.h | 146 +++++++++++++++++++++++++++++++++++++-
- 1 file changed, 144 insertions(+), 2 deletions(-)
+ gas/config/obj-coff-seh.h | 148 +++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 146 insertions(+), 2 deletions(-)
 
 diff --git a/gas/config/obj-coff-seh.h b/gas/config/obj-coff-seh.h
-index 598870ae4e0..7d7adbd30c5 100644
+index d926f314ec5..dced57c7b3b 100644
 --- a/gas/config/obj-coff-seh.h
 +++ b/gas/config/obj-coff-seh.h
 @@ -19,12 +19,13 @@
@@ -100,7 +100,7 @@ index 598870ae4e0..7d7adbd30c5 100644
  /* architecture specific pdata/xdata handling.  */
  #define SEH_CMDS \
          {"seh_proc", obj_coff_seh_proc, 0}, \
-@@ -87,6 +123,83 @@ typedef struct seh_prologue_element
+@@ -87,8 +123,87 @@ typedef struct seh_prologue_element
    symbolS *pc_addr;
  } seh_prologue_element;
  
@@ -183,8 +183,12 @@ index 598870ae4e0..7d7adbd30c5 100644
 +
  typedef struct seh_context
  {
++  struct seh_context *next;
++
    /* Initial code-segment.  */
-@@ -126,13 +239,17 @@ typedef struct seh_context
+   segT code_seg;
+   /* Function name.  */
+@@ -126,13 +241,17 @@ typedef struct seh_context
    int elems_count;
    int elems_max;
    seh_prologue_element *elems;
@@ -203,7 +207,7 @@ index 598870ae4e0..7d7adbd30c5 100644
  } seh_kind;
  
  /* Forward declarations.  */
-@@ -201,4 +318,29 @@ static void obj_coff_seh_code (int);
+@@ -201,4 +320,29 @@ static void obj_coff_seh_code (int);
    (PEX64_OFFSET_TO_SCOPE_COUNT(COUNTOFUNWINDCODES) + \
     PEX64_SCOPE_ENTRY_SIZE * (IDX))
  

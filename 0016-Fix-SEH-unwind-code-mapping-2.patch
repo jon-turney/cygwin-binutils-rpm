@@ -1,0 +1,104 @@
+From 3534689bf41b6b9ce809198923b963302aa9ea7f Mon Sep 17 00:00:00 2001
+From: Evgeny Karpov <evgeny@kmaps.co>
+Date: Mon, 1 Dec 2025 08:59:45 +0100
+Subject: [PATCH 16/16] Fix SEH unwind code mapping (#2)
+
+Signed-off-by: Evgeny Karpov <evgeny@kmaps.co>
+---
+ gas/config/obj-coff-seh.c | 47 +++++++++++++++++++--------------------
+ 1 file changed, 23 insertions(+), 24 deletions(-)
+
+diff --git a/gas/config/obj-coff-seh.c b/gas/config/obj-coff-seh.c
+index 415b2b72599..122b916f97e 100644
+--- a/gas/config/obj-coff-seh.c
++++ b/gas/config/obj-coff-seh.c
+@@ -38,7 +38,6 @@ struct unwind_code_pack_info {
+   int offset;
+   int reg_right_shift;
+   int reg_offset;
+-  int type;
+   int size;
+ };
+ 
+@@ -52,47 +51,47 @@ static struct seh_seg_list *p_segcur = NULL;
+ 
+ const struct unwind_code_pack_info unwind_code_pack_infos[] = {
+   {NULL,		  5, 0, 3, ARM64_UNOP_ALLOCS,	   4, 0, 0,  0,
+-   alloc_s, 1},
++   1},
+   {NULL,		 11, 0, 5, ARM64_UNOP_ALLOCM,	   4, 0, 0,  0,
+-   alloc_m, 2},
++   2},
+   {NULL, 		 24, 0, 8, ARM64_UNOP_ALLOCL,	   4, 0, 0,  0,
+-   alloc_l, 4},
++   4},
+   {".seh_save_reg",	  6, 4, 6, ARM64_UNOP_SAVEREG,	   3, 0, 0, 19,
+-   save_reg, 2},
++   2},
+   {".seh_save_reg_x",	  5, 4, 7, ARM64_UNOP_SAVEREGX,	   3, 1, 0, 19,
+-   save_reg_x, 2},
++   2},
+   {".seh_save_regp",	  6, 4, 6, ARM64_UNOP_SAVEREGP,	   3, 0, 0, 19,
+-   save_regp, 2},
++   2},
+   {".seh_save_regp_x",	  6, 4, 6, ARM64_UNOP_SAVEREGPX,   3, 1, 0, 19,
+-   save_regp_x, 2},
+-  {".seh_save_lrpair",	  6, 3, 7, ARM64_UNOP_SAVELRPAIR,  3, 0, 1, 19,
+-   save_lrpair, 2},
++   2},
+   {".seh_save_fregp",	  6, 3, 7, ARM64_UNOP_SAVEFREGP,   3, 0, 0,  8,
+-   save_fregp, 2},
++   2},
+   {".seh_save_fregp_x",	  6, 3, 7, ARM64_UNOP_SAVEFREGPX,  3, 1, 0,  8,
+-   save_fregp_x, 2},
++   2},
+   {".seh_save_freg", 	  6, 3, 7, ARM64_UNOP_SAVEFREG,	   3, 0, 0,  8,
+-   save_freg, 2},
++   2},
+   {".seh_save_freg_x",	  5, 3, 8, ARM64_UNOP_SAVEFREGX,   3, 1, 0,  8,
+-   save_freg_x, 2},
++   2},
++  {".seh_save_lrpair",	  6, 3, 7, ARM64_UNOP_SAVELRPAIR,  3, 0, 1, 19,
++   2},
+   {".seh_save_fplr",	  6, 0, 2, ARM64_UNOP_SAVEFPLR,	   3, 0, 0,  0,
+-   save_fplr, 1},
++   1},
+   {".seh_save_fplr_x",	  6, 0, 6, ARM64_UNOP_SAVEFPLRX,   3, 1, 0,  0,
+-   save_fplr_x, 1},
++   1},
+   {".seh_save_r19r20_x",  5, 0, 3, ARM64_UNOP_SAVER19R20X, 3, 0, 0,  0,
+-   save_r19r20_x, 1},
++   1},
+   {".seh_add_fp",	  8, 0, 8, ARM64_UNOP_ADDFP,	   0, 0, 0,  0,
+-   add_fp, 2},
++   2},
+   {".seh_set_fp",	  0, 0, 8, ARM64_UNOP_SETFP,	   0, 0, 0,  0,
+-   set_fp, 1},
++   1},
+   {".seh_save_next",	  0, 0, 8, ARM64_UNOP_SAVENEXT,	   0, 0, 0,  0,
+-   save_next, 1},
++   1},
+   {".seh_nop",		  0, 0, 8, ARM64_UNOP_NOP,	   0, 0, 0,  0,
+-   nop, 1},
++   1},
+   {".seh_pac_sign_lr",	  0, 0, 8, ARM64_UNOP_PACSIGNLR,   0, 0, 0,  0,
+-   pac_sign_lr, 1},
++   1},
+   {NULL,		  0, 0, 8, ARM64_UNOP_END,	   0, 0, 0,  0,
+-   end, 1},
++   1},
+ };
+ 
+ static void write_function_xdata (seh_context *);
+@@ -550,7 +549,7 @@ seh_arm64_add_unwind_element (seh_arm64_unwind_types unwind_type, int offset,
+       arm64_element->value |= code << value_offset_bits;
+     }
+ 
+-  arm64_element->type = unwind_code_pack_info->type;
++  arm64_element->type = unwind_type;
+   seh_ctx_cur->arm64_ctx.unwind_codes_byte_count += unwind_code_pack_info->size;
+ }
+ 
+-- 
+2.51.0
+

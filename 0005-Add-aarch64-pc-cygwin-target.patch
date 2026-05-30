@@ -1,7 +1,7 @@
-From ee28d754ee46a19d458796d1071656858f1d2512 Mon Sep 17 00:00:00 2001
+From e01a045c50614bcdd1345ab9342f7d6891b37fa8 Mon Sep 17 00:00:00 2001
 From: =?UTF-8?q?Radek=20Barto=C5=88?= <radek.barton@microsoft.com>
 Date: Fri, 10 Jan 2025 11:34:16 +0100
-Subject: [PATCH 06/18] Add `aarch64-pc-cygwin` target
+Subject: [PATCH 05/16] Add `aarch64-pc-cygwin` target
 
 Co-authored-by: Evgeny Karpov <eukarpov@gmail.com>
 ---
@@ -11,32 +11,32 @@ Co-authored-by: Evgeny Karpov <eukarpov@gmail.com>
  config.guess                           | 3 +++
  config.rpath                           | 2 +-
  gas/configure.tgt                      | 2 +-
- gdb/configure.host                     | 1 +
+ gdb/configure.host                     | 3 +++
  gdbserver/configure.srv                | 7 +++++++
  ld/configure.tgt                       | 4 ++--
- ld/emultempl/pe.em                     | 7 +++++++
+ ld/emultempl/pe.em                     | 4 ++++
  ld/emultempl/pep.em                    | 8 ++++++--
  readline/readline/support/config.guess | 3 +++
- 12 files changed, 34 insertions(+), 9 deletions(-)
+ 12 files changed, 33 insertions(+), 9 deletions(-)
 
 diff --git a/bfd/config.bfd b/bfd/config.bfd
-index d9131276447..08b5a7d3413 100644
+index 4dde5321f23..59407ce9d77 100644
 --- a/bfd/config.bfd
 +++ b/bfd/config.bfd
-@@ -248,7 +248,7 @@ case "${targ}" in
+@@ -254,7 +254,7 @@ case "${targ}" in
      targ_selvecs="aarch64_elf64_be_vec aarch64_elf32_le_vec aarch64_elf32_be_vec arm_elf32_le_vec arm_elf32_be_vec aarch64_pei_le_vec aarch64_pe_le_vec"
      want64=true
      ;;
 -  aarch64-*-pe* | aarch64-*-mingw*)
 +  aarch64-*-pe* | aarch64-*-mingw* | aarch64-*-cygwin*)
      targ_defvec=aarch64_pe_le_vec
-     targ_selvecs="aarch64_pe_le_vec aarch64_pei_le_vec aarch64_pe_big_vec aarch64_elf64_le_vec aarch64_elf64_be_vec aarch64_elf32_le_vec aarch64_elf32_be_vec arm_elf32_le_vec arm_elf32_be_vec pdb_vec"
+     targ_selvecs="aarch64_pe_le_vec aarch64_pei_le_vec aarch64_pe_bigobj_le_vec aarch64_elf64_le_vec aarch64_elf64_be_vec aarch64_elf32_le_vec aarch64_elf32_be_vec arm_elf32_le_vec arm_elf32_be_vec pdb_vec"
      want64=true
 diff --git a/binutils/configure b/binutils/configure
-index 8b2c19f9fa3..04554c4ac21 100755
+index 196cd142366..5f099b4ce84 100755
 --- a/binutils/configure
 +++ b/binutils/configure
-@@ -16138,7 +16138,7 @@ do
+@@ -16512,7 +16512,7 @@ do
      esac
  
      case $targ in
@@ -46,10 +46,10 @@ index 8b2c19f9fa3..04554c4ac21 100755
  	if test -z "$DLLTOOL_DEFAULT"; then
  	    DLLTOOL_DEFAULT="-DDLLTOOL_DEFAULT_AARCH64"
 diff --git a/binutils/configure.ac b/binutils/configure.ac
-index cb65e503df1..23a3287adb3 100644
+index 5553942b238..9bec31883b9 100644
 --- a/binutils/configure.ac
 +++ b/binutils/configure.ac
-@@ -368,7 +368,7 @@ changequote([,])dnl
+@@ -367,7 +367,7 @@ changequote([,])dnl
      esac
  
      case $targ in
@@ -59,7 +59,7 @@ index cb65e503df1..23a3287adb3 100644
  	if test -z "$DLLTOOL_DEFAULT"; then
  	    DLLTOOL_DEFAULT="-DDLLTOOL_DEFAULT_AARCH64"
 diff --git a/config.guess b/config.guess
-index 48a684601bd..da7f21385fa 100755
+index a9d01fde461..08e5cb3fabe 100755
 --- a/config.guess
 +++ b/config.guess
 @@ -955,6 +955,9 @@ EOF
@@ -86,7 +86,7 @@ index 8bd08348a9a..748988a9e4b 100755
  	;;
        *)
 diff --git a/gas/configure.tgt b/gas/configure.tgt
-index 7c81bffa16b..f648e883f2d 100644
+index f0ea55d9def..b55cc6e8b07 100644
 --- a/gas/configure.tgt
 +++ b/gas/configure.tgt
 @@ -138,7 +138,7 @@ case ${generic_target} in
@@ -99,10 +99,10 @@ index 7c81bffa16b..f648e883f2d 100644
    alpha-*-osf*)				fmt=ecoff ;;
    alpha-*-linux*ecoff*)			fmt=ecoff ;;
 diff --git a/ld/configure.tgt b/ld/configure.tgt
-index 0209b34f0fc..61311209ac6 100644
+index d3ac5ba192b..460c24752de 100644
 --- a/ld/configure.tgt
 +++ b/ld/configure.tgt
-@@ -127,7 +127,7 @@ aarch64-*-haiku*)	targ_emul=aarch64haiku
+@@ -124,7 +124,7 @@ aarch64-*-haiku*)	targ_emul=aarch64haiku
  aarch64-*-nto*)		targ_emul=aarch64nto
  			targ_extra_emuls="aarch64elf aarch64elf32 aarch64elf32b aarch64elfb armelf armelfb"
  			;;
@@ -111,7 +111,7 @@ index 0209b34f0fc..61311209ac6 100644
  			targ_emul=aarch64pe
  			targ_extra_emuls=arm64pe
  			targ_extra_ofiles="deffilep.o pep-dll-aarch64.o pe-dll.o pdb.o"
-@@ -1141,7 +1141,7 @@ spu-*-elf*)
+@@ -1078,7 +1078,7 @@ spu-*-elf*)
    NATIVE_LIB_DIRS='/lib'
    ;;
  
@@ -121,23 +121,20 @@ index 0209b34f0fc..61311209ac6 100644
    ;;
  
 diff --git a/ld/emultempl/pe.em b/ld/emultempl/pe.em
-index b522687c1d5..09cf183b64b 100644
+index 46abac78946..915a9d293e2 100644
 --- a/ld/emultempl/pe.em
 +++ b/ld/emultempl/pe.em
-@@ -10,6 +10,12 @@ case ${target} in
+@@ -10,6 +10,9 @@ case ${target} in
    *-*-mingw*)
      mingw_behavior=1
      ;;
 +  aarch64-*-cygwin*)
 +    mingw_behavior=1
 +    ;;
-+  *-*-cygwin*)
-+    mingw_behavior=0
-+    ;;
    *)
      mingw_behavior=0
      ;;
-@@ -69,6 +75,7 @@ fragment <<EOF
+@@ -69,6 +72,7 @@ fragment <<EOF
  EOF
  
  case ${target} in
@@ -146,7 +143,7 @@ index b522687c1d5..09cf183b64b 100644
    i[3-7]86-*-mingw32* | i[3-7]86-*-cygwin* | i[3-7]86-*-winnt | i[3-7]86-*-pe)
  fragment <<EOF
 diff --git a/ld/emultempl/pep.em b/ld/emultempl/pep.em
-index 85c338fd95f..2f3e7dee067 100644
+index 126b71f0df1..1943ec0f8ca 100644
 --- a/ld/emultempl/pep.em
 +++ b/ld/emultempl/pep.em
 @@ -7,6 +7,10 @@ else
@@ -155,7 +152,7 @@ index 85c338fd95f..2f3e7dee067 100644
  case ${target} in
 +  aarch64-*-cygwin*)
 +    move_default_addr_high=1
-+    mingw_behavior=1;
++    mingw_behavior=1
 +    ;;
    *-*-cygwin*)
      move_default_addr_high=1
