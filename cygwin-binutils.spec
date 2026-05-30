@@ -1,7 +1,7 @@
 %global run_testsuite 0
 
 Name:           cygwin-binutils
-Version:        2.45.1
+Version:        2.46.1
 Release:        1%{?dist}
 Summary:        Cross-compiled version of binutils for Cygwin environments
 
@@ -238,6 +238,7 @@ cat cygwin-opcodes.lang >> cygwin-binutils.lang
 %{_prefix}/%{cygwin32_target}/bin/ranlib
 %{_prefix}/%{cygwin32_target}/bin/readelf
 %{_prefix}/%{cygwin32_target}/bin/strip
+%{_prefix}/%{cygwin32_target}/bin/windres
 %{_prefix}/%{cygwin32_target}/lib/ldscripts
 
 %files -n cygwin64-binutils
@@ -272,10 +273,14 @@ cat cygwin-opcodes.lang >> cygwin-binutils.lang
 %{_prefix}/%{cygwin64_target}/bin/ranlib
 %{_prefix}/%{cygwin64_target}/bin/readelf
 %{_prefix}/%{cygwin64_target}/bin/strip
+%{_prefix}/%{cygwin64_target}/bin/windres
 %{_prefix}/%{cygwin64_target}/lib/ldscripts
 
 
 %changelog
+* Sat Sep 12 2026 Jon Turney <jon.turney@dronecode.org.uk> - 2.46-1
+- new version
+
 * Thu Aug 26 2021 Yaakov Selkowitz <yselkowi@redhat.com> - 2.37-1
 - new version
 
