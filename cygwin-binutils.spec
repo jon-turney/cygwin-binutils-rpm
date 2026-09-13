@@ -30,6 +30,7 @@ Patch115:       0015-Support-relocation-for-weak-references-4-1.patch
 Patch116:       0016-Fix-SEH-unwind-code-mapping-2.patch
 
 Patch118:       0018-Drop-pep-dll-aarch64-x86_64-.c.patch
+Patch119:       0019-ld-pep-Stop-emitting-reference-to-the-pseudo-relocat.patch
 
 Patch1000:      w32api-sysroot.patch
 Patch1001:      binutils-textdomain.patch
