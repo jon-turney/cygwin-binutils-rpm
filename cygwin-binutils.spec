@@ -1,36 +1,43 @@
 %global run_testsuite 0
 
+%global snapshot_commit 1469a04f30917ef6a2bf4afc73e442b836574563
+%global snapshot_shortcommit %(echo %{snapshot_commit} | cut -c1-8)
+%global snapshot_date 20260921
+
 Name:           cygwin-binutils
-Version:        2.46.1
-Release:        2%{?dist}
-Summary:        Binutils for cross-compiling to Cygwin environments
+Version:        2.47.50
+%if "%{?snapshot_commit}" != ""
+Release:        0.%{snapshot_date}.%{snapshot_shortcommit}%{?dist}
+%else
+Release:        1%{?dist}
+%endif
+Summary:        Binutils for cross-compiling to Cygwin
 
 License:        GPLv2+ and LGPLv2+ and GPLv3+ and LGPLv3+
 Group:          Development/Libraries
 
 URL:            https://www.gnu.org/software/binutils/
+%if "%{?snapshot_commit}" != ""
+Source0:        binutils.%{snapshot_commit}.tar.gz
+%else
 Source0:        https://ftp.gnu.org/gnu/binutils/binutils-%{version}.tar.xz
-Patch1:		binutils-2.45.1-cygwin-config-rpath.patch
+%endif
 
-Patch101:       0001-WIP-fix-to-dll-relocations.patch
-Patch102:       0002-Add-error-messages-for-invalid-relocations.patch
-Patch103:       0003-aarch64-Fix-IMAGE_REL_ARM64_PAGEBASE_REL21-relocatio.patch
+Patch0:         binutils-2.45.1-cygwin-config-rpath.patch
 
-Patch105:       0005-Add-aarch64-pc-cygwin-target.patch
-Patch106:       0006-Adjust-pdata-function-table-entries-sorting-for-AArc.patch
-Patch107:       0007-Define-unwinding-and-SEH-data-structures-for-aarch64.patch
-Patch108:       0008-Adjust-x64-SEH-implementation-for-AArch64.patch
-Patch109:       0009-Add-aarch64-specific-SEH-commands.patch
-Patch110:       0010-Write-SEH-records-to-pdata-xdata.patch
-Patch111:       0011-Apply-SEH-to-AArch64.patch
-Patch112:       0012-Fix-the-calculation-of-the-function-length.patch
+# mcw patches
+Patch001:       woarm64-0001-WIP-fix-to-dll-relocations.patch
+Patch002:       woarm64-0002-Add-error-messages-for-invalid-relocations.patch
+Patch004:       woarm64-0004-Add-aarch64-pc-cygwin-target.patch
+Patch005:       woarm64-0005-Allow-build-of-libsim-for-aarch64-w64-mingw32-and-aa.patch
+Patch006:       woarm64-0006-Add-auto-import-support-to-AArch64-9.patch
+Patch007:       woarm64-0007-PE-COFF-AArch64-avoid-ADRP-for-ABS-small-constants.patch
+Patch008:       woarm64-0008-ld-pep.em-use-mingw_behavior-for-the-aarch64-cygwin-.patch
+Patch009:       woarm64-0009-bfd-aarch64-PE-mark-handled-relocs-with-r_ignore.patch
+Patch010:       woarm64-0010-bfd-restore-the-section_htab-guards-removed-by-b3dcd.patch
 
-Patch114:       0014-Add-auto-import-support-to-AArch64-9.patch
-Patch115:       0015-Support-relocation-for-weak-references-4-1.patch
-Patch116:       0016-Fix-SEH-unwind-code-mapping-2.patch
-
-Patch118:       0018-Drop-pep-dll-aarch64-x86_64-.c.patch
-Patch119:       0019-ld-pep-Stop-emitting-reference-to-the-pseudo-relocat.patch
+# additional patches
+Patch120:       0019-ld-pep-Stop-emitting-reference-to-the-pseudo-relocat.patch
 
 Patch1000:      w32api-sysroot.patch
 Patch1001:      binutils-textdomain.patch
@@ -93,7 +100,14 @@ understand Cygwin executables and DLLs.
 
 
 %prep
-%autosetup -n binutils-%{version} -p1
+
+%if "%{?snapshot_commit}" != ""
+%define src_prefix binutils-%{snapshot_commit}
+%else
+%define src_prefix binutils-%{version}
+%endif
+
+%autosetup -n %{src_prefix} -p1
 
 
 %build
@@ -110,6 +124,7 @@ CFLAGS="$RPM_OPT_FLAGS" \
   --libdir=%{_libdir} \
   --mandir=%{_mandir} \
   --infodir=%{_infodir} \
+  --disable-werror \
   --with-system-zlib \
   --disable-gdb \
   --disable-libdecnumber \
@@ -132,6 +147,7 @@ CFLAGS="$RPM_OPT_FLAGS" \
   --libdir=%{_libdir} \
   --mandir=%{_mandir} \
   --infodir=%{_infodir} \
+  --disable-werror \
   --with-system-zlib \
   --disable-gdb \
   --disable-libdecnumber \
@@ -154,6 +170,7 @@ CFLAGS="$RPM_OPT_FLAGS" \
   --libdir=%{_libdir} \
   --mandir=%{_mandir} \
   --infodir=%{_infodir} \
+  --disable-werror \
   --with-system-zlib \
   --disable-gdb \
   --disable-libdecnumber \
@@ -178,6 +195,7 @@ CFLAGS="$RPM_OPT_FLAGS" \
   --libdir=%{_libdir} \
   --mandir=%{_mandir} \
   --infodir=%{_infodir} \
+  --disable-werror \
   --with-system-zlib \
   --disable-gdb \
   --disable-libdecnumber \
@@ -367,6 +385,9 @@ cat cygwin-opcodes.lang >> cygwin-binutils.lang
 
 
 %changelog
+* Mon Sep 21 2026 Jon Turney <jon.turney@dronecode.org.uk> - 2.47.50-0
+- new version
+
 * Sat Sep 12 2026 Jon Turney <jon.turney@dronecode.org.uk> - 2.46-2
 - add cygwin-aarch64
 
