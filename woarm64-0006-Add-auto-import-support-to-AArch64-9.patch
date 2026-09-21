@@ -1,12 +1,13 @@
-From e96eb5e3d8eb42473d037047faca3e3dce0d55c7 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Evgeny Karpov <eukarpov@gmail.com>
 Date: Thu, 25 Sep 2025 10:43:17 +0200
-Subject: [PATCH 14/16] Add auto-import support to AArch64 (#9)
+Subject: [PATCH 06/10] Add auto-import support to AArch64 (#9)
 
 The patch implements the required changes to support runtime relocations in MinGW.
 For 26-bit relocations, the linker generates a jump stub, as a single opcode is not sufficient for relocation.
 
 Co-authored-by: Evgeny Karpov <evgeny@kmaps.co>
+(cherry picked from commit 44335833f8f734f978211b082b15aed14efcf958)
 ---
  bfd/coff-aarch64.c  | 13 +++++--
  bfd/reloc.c         |  8 -----
@@ -15,7 +16,7 @@ Co-authored-by: Evgeny Karpov <evgeny@kmaps.co>
  4 files changed, 115 insertions(+), 11 deletions(-)
 
 diff --git a/bfd/coff-aarch64.c b/bfd/coff-aarch64.c
-index 0d33c9424b9..a860912d81c 100644
+index d889359a6fc..c05b12840f8 100644
 --- a/bfd/coff-aarch64.c
 +++ b/bfd/coff-aarch64.c
 @@ -266,17 +266,26 @@ static const reloc_howto_type arm64_reloc_howto_branch26
@@ -48,10 +49,10 @@ index 0d33c9424b9..a860912d81c 100644
  static const reloc_howto_type arm64_reloc_howto_branch19
  = HOW (IMAGE_REL_ARM64_BRANCH19,
 diff --git a/bfd/reloc.c b/bfd/reloc.c
-index 5e8bbfcb271..98343696a33 100644
+index 9b820bdfee6..d0bcb30b97e 100644
 --- a/bfd/reloc.c
 +++ b/bfd/reloc.c
-@@ -1208,14 +1208,6 @@ _bfd_relocate_contents (reloc_howto_type *howto,
+@@ -1212,14 +1212,6 @@ _bfd_relocate_contents (reloc_howto_type *howto,
    if (howto->negate)
      relocation = -relocation;
  
@@ -67,10 +68,10 @@ index 5e8bbfcb271..98343696a33 100644
    x = read_reloc (input_bfd, location, howto);
  
 diff --git a/ld/emultempl/pep.em b/ld/emultempl/pep.em
-index 1943ec0f8ca..fb952d2c8b5 100644
+index 9aff9929cda..b4558da4d29 100644
 --- a/ld/emultempl/pep.em
 +++ b/ld/emultempl/pep.em
-@@ -1169,6 +1169,28 @@ read_addend (arelent *rel, asection *s)
+@@ -1170,6 +1170,28 @@ read_addend (arelent *rel, asection *s)
  
    switch (rel->howto->bitsize)
      {
@@ -210,6 +211,3 @@ index f43bd14896e..7fd692efb95 100644
        if (pe_dll_extra_pe_debug)
  	printf ("creating runtime pseudo-reloc entry for %s (addend=%d)\n",
  		fixup_name, (int) addend);
--- 
-2.51.0
-
