@@ -232,12 +232,13 @@ make -C build_multilib install DESTDIR=$RPM_BUILD_ROOT/multilib
 rm -rf $RPM_BUILD_ROOT%{_infodir}
 rm -f $RPM_BUILD_ROOT%{_libdir}/bfd-plugins/libdep.*
 
-# Keep the multilib versions of the strip, objdump and objcopy commands
+# Keep the multilib versions of the strip, objdump, objcopy and nm commands
 # We need these for the RPM integration as these tools must be able to
 # process all Cygwin binaries
 mv $RPM_BUILD_ROOT/multilib%{_bindir}/%{cygwin64_strip} $RPM_BUILD_ROOT%{_bindir}/%{cygwin_strip}
 mv $RPM_BUILD_ROOT/multilib%{_bindir}/%{cygwin64_objdump} $RPM_BUILD_ROOT%{_bindir}/%{cygwin_objdump}
 mv $RPM_BUILD_ROOT/multilib%{_bindir}/%{cygwin64_objcopy} $RPM_BUILD_ROOT%{_bindir}/%{cygwin_objcopy}
+mv $RPM_BUILD_ROOT/multilib%{_bindir}/%{cygwin64_nm} $RPM_BUILD_ROOT%{_bindir}/%{cygwin_nm}
 rm -rf $RPM_BUILD_ROOT/multilib
 
 %find_lang cygwin-binutils
@@ -259,6 +260,7 @@ cat cygwin-opcodes.lang >> cygwin-binutils.lang
 %{_bindir}/%{cygwin_strip}
 %{_bindir}/%{cygwin_objdump}
 %{_bindir}/%{cygwin_objcopy}
+%{_bindir}/%{cygwin_nm}
 
 %files -n cygwin32-binutils
 %{_bindir}/%{cygwin32_target}-addr2line
